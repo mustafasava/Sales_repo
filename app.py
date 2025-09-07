@@ -13,9 +13,19 @@ SHEET_NAME = "All_sales"
 def load_data(path, sheet):
     df = pd.read_excel(path, sheet_name=sheet, engine="openpyxl")
     df.columns = [c.strip() for c in df.columns]
-    # Ensure Month column is datetime
+
+    # Ensure Month & Year are numeric
     if "Month" in df.columns:
-        df["Month"] = pd.to_datetime(df["Month"], errors="coerce")
+        df["Month"] = pd.to_numeric(df["Month"], errors="coerce").astype("Int64")
+    if "Year" in df.columns:
+        df["Year"] = pd.to_numeric(df["Year"], errors="coerce").astype("Int64")
+
+    # Create period column YYYY-MM
+    if "Month" in df.columns and "Year" in df.columns:
+        df["Period"] = pd.to_datetime(
+            df["Year"].astype(str) + "-" + df["Month"].astype(str) + "-01",
+            errors="coerce"
+        )
     return df
 
 # Load data
@@ -50,18 +60,22 @@ col1.metric("Total Sales Units", f"{f['Sales Units'].sum():,.0f}")
 col2.metric("Total Sales Value", f"{f['Sales Value'].sum():,.0f}")
 
 # Trend line chart
-if not f.empty:
+if not f.empty and "Period" in f.columns:
     trend = (
-        f.groupby("Month", as_index=False)[["Sales Units", "Sales Value"]]
+        f.groupby("Period", as_index=False)[["Sales Units", "Sales Value"]]
         .sum()
-        .sort_values("Month")
+        .sort_values("Period")
     )
 
     line_units = alt.Chart(trend).mark_line(point=True, color="blue").encode(
-        x="Month:T", y="Sales Units:Q", tooltip=["Month:T", "Sales Units:Q"]
+        x=alt.X("Period:T", title="Period (Year-Month)"),
+        y="Sales Units:Q",
+        tooltip=["Period:T", "Sales Units:Q"]
     )
     line_value = alt.Chart(trend).mark_line(point=True, color="green").encode(
-        x="Month:T", y="Sales Value:Q", tooltip=["Month:T", "Sales Value:Q"]
+        x=alt.X("Period:T", title="Period (Year-Month)"),
+        y="Sales Value:Q",
+        tooltip=["Period:T", "Sales Value:Q"]
     )
 
     chart = alt.layer(line_units, line_value).resolve_scale(y="independent").properties(
