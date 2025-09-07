@@ -14,18 +14,9 @@ def load_data(path, sheet):
     df = pd.read_excel(path, sheet_name=sheet, engine="openpyxl")
     df.columns = [c.strip() for c in df.columns]
 
-    # Ensure Month & Year are numeric
+    # Ensure Month is integer (1–12)
     if "Month" in df.columns:
         df["Month"] = pd.to_numeric(df["Month"], errors="coerce").astype("Int64")
-    if "Year" in df.columns:
-        df["Year"] = pd.to_numeric(df["Year"], errors="coerce").astype("Int64")
-
-    # Create period column YYYY-MM
-    if "Month" in df.columns and "Year" in df.columns:
-        df["Period"] = pd.to_datetime(
-            df["Year"].astype(str) + "-" + df["Month"].astype(str) + "-01",
-            errors="coerce"
-        )
     return df
 
 # Load data
@@ -34,6 +25,10 @@ if not DATA_FILE.exists():
     st.stop()
 
 df = load_data(DATA_FILE, SHEET_NAME)
+
+# Debugging aid
+st.write("🔎 Columns loaded:", df.columns.tolist())
+st.dataframe(df.head())
 
 # Sidebar filters
 with st.sidebar:
@@ -60,22 +55,22 @@ col1.metric("Total Sales Units", f"{f['Sales Units'].sum():,.0f}")
 col2.metric("Total Sales Value", f"{f['Sales Value'].sum():,.0f}")
 
 # Trend line chart
-if not f.empty and "Period" in f.columns:
+if not f.empty:
     trend = (
-        f.groupby("Period", as_index=False)[["Sales Units", "Sales Value"]]
+        f.groupby("Month", as_index=False)[["Sales Units", "Sales Value"]]
         .sum()
-        .sort_values("Period")
+        .sort_values("Month")
     )
 
     line_units = alt.Chart(trend).mark_line(point=True, color="blue").encode(
-        x=alt.X("Period:T", title="Period (Year-Month)"),
+        x=alt.X("Month:O", title="Month"),
         y="Sales Units:Q",
-        tooltip=["Period:T", "Sales Units:Q"]
+        tooltip=["Month:O", "Sales Units:Q"]
     )
     line_value = alt.Chart(trend).mark_line(point=True, color="green").encode(
-        x=alt.X("Period:T", title="Period (Year-Month)"),
+        x=alt.X("Month:O", title="Month"),
         y="Sales Value:Q",
-        tooltip=["Period:T", "Sales Value:Q"]
+        tooltip=["Month:O", "Sales Value:Q"]
     )
 
     chart = alt.layer(line_units, line_value).resolve_scale(y="independent").properties(
