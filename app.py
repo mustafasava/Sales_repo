@@ -11,10 +11,15 @@ SHEET_NAME = "All_sales"
 
 @st.cache_data(show_spinner=False)
 def load_data(path, sheet):
-    df = pd.read_excel(path, sheet_name=sheet, engine="openpyxl")
+    df = pd.read_excel(
+        path,
+        sheet_name=sheet,
+        engine="openpyxl",
+        usecols="A:M"   # ✅ only take columns A to M
+    )
     df.columns = [c.strip() for c in df.columns]
 
-    # Ensure Month is integer (1–12)
+    # Ensure Month is numeric
     if "Month" in df.columns:
         df["Month"] = pd.to_numeric(df["Month"], errors="coerce").astype("Int64")
     return df
@@ -25,10 +30,6 @@ if not DATA_FILE.exists():
     st.stop()
 
 df = load_data(DATA_FILE, SHEET_NAME)
-
-# Debugging aid
-st.write("🔎 Columns loaded:", df.columns.tolist())
-st.dataframe(df.head())
 
 # Sidebar filters
 with st.sidebar:
@@ -79,3 +80,7 @@ if not f.empty:
     st.altair_chart(chart, use_container_width=True)
 else:
     st.warning("No data available for these filters.")
+
+# Show filtered data table
+st.subheader("Filtered Data")
+st.dataframe(f)
