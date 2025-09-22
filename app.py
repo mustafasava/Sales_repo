@@ -48,7 +48,7 @@ st.title("Data Cleaning & Prep Pipeline")
 uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx", "xls"])
 
 if uploaded_file:
-    temp_path = "temp_upload.xlsx"
+    temp_path = uploaded_file.name
     with open(temp_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
 
