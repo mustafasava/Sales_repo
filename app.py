@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
-from libsql_client import create_client
+
 
 # --- Import your cleaning functions ---
 from modules.cleaning.IBS_cln import ibs_cln
@@ -9,9 +9,11 @@ from modules.cleaning.IBS_cln import ibs_cln
 # (when you add more: from modules.EPDA_cln import epda_cln, etc.)
 
 # --- Turso connection ---
+from libsql_client import create_client_sync
+
 db_url = st.secrets["TURSO_URL"]
 db_token = st.secrets["TURSO_AUTH_TOKEN"]
-client = create_client(url=db_url, auth_token=db_token)
+client = create_client_sync(url=db_url, auth_token=db_token)
 
 # --- Export to native table ---
 def export_to_native(table, df, month, year):
