@@ -9,10 +9,9 @@ from modules.cleaning.IBS_cln import ibs_cln
 # (when you add more: from modules.EPDA_cln import epda_cln, etc.)
 
 # --- Turso connection ---
-db_url = st.secrets["libsql://distnative-mustafa1998.aws-us-west-2.turso.io"]
-db_token = st.secrets["eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NTg1NTI1MjUsImlkIjoiOWM4NWMzMTAtYzczNy00MzU1LTk4YmEtZTBiZjU4YWE2NTIyIiwicmlkIjoiNDZjYTRlMmMtOTNmMS00YmU2LWI3ZTctY2MxYzY0YzM1MjU3In0._xg68tAZ3ZMiQ68x8sWiJZM6O89Ch31AVO5L2K0cnL8--eWUOva7fSRpvSIUgPLnKgCPcqLRSF8IQ-6ZF04fDw"]
+db_url = st.secrets["TURSO_URL"]
+db_token = st.secrets["TURSO_AUTH_TOKEN"]
 client = create_client(url=db_url, auth_token=db_token)
-
 
 # --- Export to native table ---
 def export_to_native(table, df, month, year):
