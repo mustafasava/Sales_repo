@@ -4,7 +4,8 @@ import os
 from libsql_client import create_client
 
 # --- Import your cleaning functions ---
-from modules.IBS_cln import ibs_cln
+from modules.cleaning.IBS_cln import ibs_cln
+
 # (when you add more: from modules.EPDA_cln import epda_cln, etc.)
 
 # --- Turso connection ---
