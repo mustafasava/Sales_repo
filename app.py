@@ -173,6 +173,16 @@ test_database_connection()
 st.header("📁 Upload Data")
 uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx", "xls"], help="Upload your distributor data file")
 
+# Initialize session state to preserve cleaned data
+if 'cleaned_data' not in st.session_state:
+    st.session_state.cleaned_data = None
+if 'distributor' not in st.session_state:
+    st.session_state.distributor = None
+if 'month' not in st.session_state:
+    st.session_state.month = None
+if 'year' not in st.session_state:
+    st.session_state.year = None
+
 if uploaded_file:
     # Save uploaded file temporarily
     temp_path = f"temp_{uploaded_file.name}"
@@ -190,7 +200,9 @@ if uploaded_file:
 
     # Run cleaning process
     st.header("🔧 Data Cleaning")
-    if st.button("🚀 Start Cleaning Process", type="primary"):
+    
+    # Use a form or separate button logic to avoid reruns
+    if st.button("🚀 Start Cleaning Process", type="primary", key="clean_btn"):
         with st.spinner("Cleaning data..."):
             if distributor == "IBS":
                 result = ibs_cln(temp_path)
@@ -207,6 +219,12 @@ if uploaded_file:
                 month, year = None, None
 
             if y == 1:
+                # Store results in session state
+                st.session_state.cleaned_data = df_cleaned
+                st.session_state.distributor = distributor
+                st.session_state.month = month
+                st.session_state.year = year
+                
                 st.success(f"✅ Cleaned {distributor} data for {month}-{year}")
                 
                 # Show cleaned data preview
@@ -221,26 +239,6 @@ if uploaded_file:
                     st.metric("Columns", df_cleaned.shape[1])
                 with col3:
                     st.metric("Period", f"{month}-{year}" if month and year else "N/A")
-
-                # Export and Prep section
-                st.header("📤 Export to Database")
-                if st.button("💾 Export to Database", type="secondary"):
-                    if month and year:
-                        with st.spinner("Exporting to database..."):
-                            if export_to_native(f"native_{distributor.lower()}", df_cleaned, month, year):
-                                st.success("✅ Data exported successfully!")
-                                
-                                # Run prep query
-                                st.header("⚙️ Running Preparation Query")
-                                with st.spinner("Running preparation query..."):
-                                    if run_prep(distributor, month, year):
-                                        st.success("🎉 Pipeline completed successfully!")
-                                    else:
-                                        st.error("❌ Preparation query failed")
-                            else:
-                                st.error("❌ Data export failed")
-                    else:
-                        st.error("❌ Month and year information missing from cleaned data")
             else:
                 st.error(f"❌ Cleaning failed: {df_cleaned}")
 
@@ -250,8 +248,48 @@ if uploaded_file:
     except:
         pass
 
+    # Show export section only if we have cleaned data
+    if st.session_state.cleaned_data is not None:
+        st.header("📤 Export to Database")
+        
+        # Display current state info
+        st.info(f"Ready to export: {st.session_state.distributor} data for {st.session_state.month}-{st.session_state.year}")
+        
+        if st.button("💾 Export to Database", type="secondary", key="export_btn"):
+            if st.session_state.month and st.session_state.year:
+                with st.spinner("Exporting to database..."):
+                    if export_to_native(
+                        f"native_{st.session_state.distributor.lower()}", 
+                        st.session_state.cleaned_data, 
+                        st.session_state.month, 
+                        st.session_state.year
+                    ):
+                        st.success("✅ Data exported successfully!")
+                        
+                        # Run prep query
+                        st.header("⚙️ Running Preparation Query")
+                        with st.spinner("Running preparation query..."):
+                            if run_prep(st.session_state.distributor, st.session_state.month, st.session_state.year):
+                                st.success("🎉 Pipeline completed successfully!")
+                                
+                                # Clear session state if needed
+                                # st.session_state.cleaned_data = None
+                            else:
+                                st.error("❌ Preparation query failed")
+                    else:
+                        st.error("❌ Data export failed")
+            else:
+                st.error("❌ Month and year information missing from cleaned data")
+
 else:
     st.info("👆 Please upload an Excel file to begin")
+    
+    # Clear session state when no file is uploaded
+    if st.session_state.cleaned_data is not None:
+        st.session_state.cleaned_data = None
+        st.session_state.distributor = None
+        st.session_state.month = None
+        st.session_state.year = None
 
 # Instructions section
 with st.expander("📖 How to use this app"):
