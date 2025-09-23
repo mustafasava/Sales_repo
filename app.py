@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
-from turso import Database
+from turso-client import Database
 
 # --- Import your cleaning functions ---
 from modules.cleaning.IBS_cln import ibs_cln
