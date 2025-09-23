@@ -1,37 +1,34 @@
 import streamlit as st
 import pandas as pd
 import os
-
+from turso import Database
 
 # --- Import your cleaning functions ---
 from modules.cleaning.IBS_cln import ibs_cln
-
-# (when you add more: from modules.EPDA_cln import epda_cln, etc.)
+# (add more later: from modules.cleaning.EPDA_cln import epda_cln, etc.)
 
 # --- Turso connection ---
-from libsql_client import create_client_sync
-
 db_url = st.secrets["TURSO_URL"]
 db_token = st.secrets["TURSO_AUTH_TOKEN"]
-client = create_client_sync(url=db_url, auth_token=db_token)
+client = Database(url=db_url, auth_token=db_token)
+
 
 # --- Export to native table ---
 def export_to_native(table, df, month, year):
-    client.execute(f"DELETE FROM {table} WHERE Month = ? AND Year = ?", (month, year))
+    """Insert cleaned data into native_<distributor> table"""
+    client.execute(f"DELETE FROM {table} WHERE Month = ? AND Year = ?", [month, year])
+
     rows = df.to_dict(orient="records")
     for row in rows:
         cols = list(row.keys())
         placeholders = ",".join("?" * len(cols))
         sql = f'INSERT INTO {table} ({",".join(cols)}) VALUES ({placeholders})'
-        client.execute(sql, tuple(row.values()))
+        client.execute(sql, list(row.values()))
 
 
 # --- Run prep query ---
 def run_prep(distributor, month, year):
-    """
-    Run the corresponding prep SQL file to populate prep_<distributor>.
-    Works with Turso Python client.
-    """
+    """Run the prep SQL query to populate prep_<distributor>"""
     query_file = f"queries/{distributor.lower()}_prep.sql"
     if not os.path.exists(query_file):
         st.error(f"Prep query not found: {query_file}")
@@ -41,19 +38,12 @@ def run_prep(distributor, month, year):
         sql = f.read()
 
     prep_table = f"prep_{distributor.lower()}"
-
-    # Clean old rows
     client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
 
-    # Insert new rows
     res = client.execute(sql, [month, year])
-
-    # Optional: log how many rows inserted if result supports it
-    if res.rows is not None:
+    if res.rows:
         st.info(f"Inserted {len(res.rows)} rows into {prep_table}")
-
     return True
-
 
 
 # --- Streamlit UI ---
@@ -62,7 +52,7 @@ st.title("Data Cleaning & Prep Pipeline")
 uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx", "xls"])
 
 if uploaded_file:
-    temp_path = uploaded_file.name
+    temp_path = uploaded_file.name  # keep original filename
     with open(temp_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
 
