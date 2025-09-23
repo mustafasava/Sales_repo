@@ -1,16 +1,16 @@
 import streamlit as st
 import pandas as pd
 import os
-from turso-client import Database
+from libsql_client import create_client_sync
 
 # --- Import your cleaning functions ---
 from modules.cleaning.IBS_cln import ibs_cln
-# (add more later: from modules.cleaning.EPDA_cln import epda_cln, etc.)
+# (later: from modules.cleaning.EPDA_cln import epda_cln, etc.)
 
 # --- Turso connection ---
 db_url = st.secrets["TURSO_URL"]
 db_token = st.secrets["TURSO_AUTH_TOKEN"]
-client = Database(url=db_url, auth_token=db_token)
+client = create_client_sync(url=db_url, auth_token=db_token)
 
 
 # --- Export to native table ---
@@ -41,8 +41,12 @@ def run_prep(distributor, month, year):
     client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
 
     res = client.execute(sql, [month, year])
-    if res.rows:
+
+    # show how many rows got inserted
+    if res.rows is not None:
         st.info(f"Inserted {len(res.rows)} rows into {prep_table}")
+    else:
+        st.info(f"Prep query executed for {prep_table}")
     return True
 
 
@@ -52,7 +56,8 @@ st.title("Data Cleaning & Prep Pipeline")
 uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx", "xls"])
 
 if uploaded_file:
-    temp_path = uploaded_file.name  # keep original filename
+    # Keep original filename (so IBS_cln can parse YYYY-MM)
+    temp_path = uploaded_file.name
     with open(temp_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
 
