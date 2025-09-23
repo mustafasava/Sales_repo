@@ -15,53 +15,36 @@ import pandas as pd
 import sys
 import os
 
-# --- Add cleaned_src to Python path ---
-sys.path.append(os.path.abspath("cleaned_src"))
+import streamlit as st
+import os
 
-# --- Import cleaning function ---
-from cln_ibs import ibs_cln   # make sure file is named cln_ibs.py inside cleaned_src
 
-st.set_page_config(page_title="IBS Cleaning Test", layout="wide")
-st.title("🧹 IBS Cleaning Test")
+st.title("IBS Cleaning App")
 
-# File uploader
-uploaded_file = st.file_uploader("Upload your IBS Excel file", type=["xlsx", "xls"])
+uploaded_file = st.file_uploader("Upload IBS Excel file", type=["xlsx"])
 
 if uploaded_file is not None:
-    st.success("✅ File uploaded successfully")
+    # Use the original uploaded file name
+    original_name = uploaded_file.name
+    save_path = os.path.join(".", original_name)
+
+    # Save uploaded file locally
+    with open(save_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+
+    st.write(f"✅ File saved as: {save_path}")
 
     try:
-        # Save file temporarily because ibs_cln expects a path
-        temp_path = "temp_uploaded.xlsx"
-        with open(temp_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+        # Run cleaning function
+        cleaned_path = cln_ibs(save_path)
 
-        # Run cleaning
-        result = ibs_cln(temp_path)
-
-        if isinstance(result, tuple) and len(result) >= 2:
-            df_or_msg, y = result[0], result[1]
-
-            if y == 1 and isinstance(df_or_msg, pd.DataFrame):
-                st.write("Preview of Cleaned Data:")
-                st.dataframe(df_or_msg.head(20))
-
-                # Option to download cleaned file
-                csv = df_or_msg.to_csv(index=False).encode("utf-8")
-                st.download_button(
-                    label="📥 Download Cleaned Data as CSV",
-                    data=csv,
-                    file_name="ibs_cleaned.csv",
-                    mime="text/csv",
-                )
-            else:
-                st.error(df_or_msg)
-
-        else:
-            st.error("❌ Unexpected return format from ibs_cln")
+        st.success(f"Cleaning successful! Cleaned file saved at: {cleaned_path}")
+        st.download_button(
+            label="Download Cleaned File",
+            data=open(cleaned_path, "rb"),
+            file_name=os.path.basename(cleaned_path),
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
     except Exception as e:
-        st.error(f"❌ Error during cleaning: {e}")
-
-else:
-    st.info("👆 Please upload an Excel file to test.")
+        st.error(f"Error during cleaning: {e}")

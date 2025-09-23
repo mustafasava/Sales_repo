@@ -1,13 +1,17 @@
-import pandas as pd
 import os
+import pandas as pd
+from github import Github
 
-def ibs_cln(sheet_path: str):
-    """
-    Cleans an IBS Excel sheet.
-    Returns:
-        (df, 1, month, year) if successful
-        (error_message, 0) if failed
-    """
+# -------- GitHub Setup --------
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # stored in Streamlit secrets
+GITHUB_REPO = "your-username/your-repo"   # change to your repo
+SAVE_FOLDER = "cleaned_src"
+
+g = Github(GITHUB_TOKEN)
+repo = g.get_repo(GITHUB_REPO)
+
+
+def cln_ibs(sheet_path: str):
     try:
         # --- Extract Year & Month from filename ---
         try:
@@ -15,7 +19,7 @@ def ibs_cln(sheet_path: str):
             year, month = date.split("-")
             year, month = int(year), int(month)
         except Exception:
-            return f"ibs_cln ERROR: Filename must contain date in 'YYYY-MM' format: {sheet_path}", 0
+            return "ibs_cln ERROR: Filename must contain date in 'YYYY-MM' format.", 0
 
         # --- Read Excel ---
         try:
@@ -28,39 +32,45 @@ def ibs_cln(sheet_path: str):
         # --- Validate required columns ---
         required_cols = [
             'Date', 'Supp. Code', 'Supp. Name', 'Item Code', 'Item Name', 'Brick',
-            'Governorate Name', 'Territory Name', 'Unnamed: 8', 'Brick Name', 'QTY', 'FU', 'Total Qty'
+            'Governorate Name', 'Territory Name', 'Unnamed: 8',
+            'Brick Name', 'QTY', 'FU', 'Total Qty'
         ]
-        expected = required_cols
-        actual = list(df.columns)
+        if list(df.columns) != required_cols:
+            return f"ibs_cln ERROR: Columns mismatch.\nExpected: {required_cols}\nFound: {list(df.columns)}", 0
 
-        if expected != actual:
-            missing = [col for col in expected if col not in actual]
-            extra = [col for col in actual if col not in expected]
-            order_issue = (set(expected) == set(actual)) and (expected != actual)
-
-            msg = "ibs_cln ERROR: Columns do not match exactly.\n"
-            if missing:
-                msg += f"Missing: {missing} /////"
-            if extra:
-                msg += f"Unexpected: {extra} /////"
-            if order_issue:
-                msg += f"Order mismatch. Expected order: {expected} ////// Found order: {actual}"
-            return msg, 0
-
-        # --- Drop rows with nulls ---
-        drop_conditions_cols = ['Supp. Code', 'Supp. Name', 'Item Code', 'Item Name']
-        df = df.dropna(subset=drop_conditions_cols, how="all")
+        # --- Drop invalid rows and columns ---
+        df = df.dropna(subset=['Supp. Code', 'Supp. Name', 'Item Code', 'Item Name'], how="all")
         df = df.drop(columns=['Unnamed: 8'])
 
         # --- Add Year & Month ---
         df["Year"] = year
         df["Month"] = month
 
-        # --- Return dataframe ---
         if df.empty:
-            return f"ibs_cln ERROR: No valid data after cleaning (empty table) - {sheet_path}", 0
-        else:
-            return df, 1, month, year
+            return f"ibs_cln ERROR: No valid data after cleaning - Empty table.", 0
+
+        # --- Save to GitHub ---
+        file_name = os.path.basename(sheet_path).lower().replace(" ", "_")
+        save_path = f"{SAVE_FOLDER}/{file_name}"
+
+        # Convert dataframe to Excel bytes
+        from io import BytesIO
+        buffer = BytesIO()
+        df.to_excel(buffer, index=False)
+        buffer.seek(0)
+
+        # Push to GitHub (create or update)
+        try:
+            contents = repo.get_contents(save_path)
+            repo.update_file(
+                save_path, f"Update cleaned file {file_name}", buffer.read(), contents.sha
+            )
+        except Exception:
+            repo.create_file(
+                save_path, f"Add cleaned file {file_name}", buffer.read()
+            )
+
+        return f"SUCCESS: Cleaned file saved to GitHub at {save_path}", 1, df, month, year
 
     except Exception as e:
         return f"ibs_cln ERROR: Unexpected error in ibs_cln(): {e}", 0
