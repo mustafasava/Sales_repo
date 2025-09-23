@@ -1,6 +1,6 @@
 from cln_egydrug import *
 from cln_epda import *
-from cln_ibs import *
+from cln_ibs import cln_ibs
 from cln_pos import *
 from cln_sofico import *
 
