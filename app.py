@@ -56,43 +56,42 @@ def run_prep(distributor, month, year):
         st.error(f"Failed to delete old rows from prep table: {e}")
         return False
 
-    # Hardcoded prep SQL directly in execute
-    sql = f"""
-    INSERT INTO prep_{distributor.lower()} (Year,Month,Item_Code,Item_Name,Brick,Territory_Name,Governorate_Name,Sales_Units,Bonus_Units,Dist_name)
-    SELECT
-        Year,
-        Month,
-        [Item Code] AS Item_Code,
-        [Item Name] AS Item_Name,
-        Brick,
-        CASE 
-            WHEN [Territory Name] = 'Template District                       '
-                THEN [Brick Name]
-            WHEN [Territory Name] = 'QENA I /RED SEA RED SEA                 '
-                THEN [Governorate Name]
-            WHEN [Territory Name] = 'NASR CITY NASR CITY                     '
-                 AND (
-                     [Governorate Name] = 'القاهره الجديده     '
-                     OR [Governorate Name] LIKE '%عاصم%'
-                 )
-                THEN 'القاهره الجديده     '
-            ELSE [Territory Name]
-        END AS Territory_Name,
-        [Governorate Name] AS Governorate_Name,
-        QTY AS Sales_Units,
-        FU AS Bonus_Units,
-        '{distributor.upper()}' AS Dist_name
-    FROM native_{distributor.lower()}
-    WHERE Month = ? AND Year = ?;
-    """
-
+    # Execute prep SQL directly
     try:
-        client.execute(sql, [month, year])
+        client.execute(f"""
+            INSERT INTO prep_{distributor.lower()} (Year,Month,Item_Code,Item_Name,Brick,Territory_Name,Governorate_Name,Sales_Units,Bonus_Units,Dist_name)
+            SELECT
+                Year,
+                Month,
+                [Item Code] AS Item_Code,
+                [Item Name] AS Item_Name,
+                Brick,
+                CASE 
+                    WHEN [Territory Name] = 'Template District                       '
+                        THEN [Brick Name]
+                    WHEN [Territory Name] = 'QENA I /RED SEA RED SEA                 '
+                        THEN [Governorate Name]
+                    WHEN [Territory Name] = 'NASR CITY NASR CITY                     '
+                         AND (
+                             [Governorate Name] = 'القاهره الجديده     '
+                             OR [Governorate Name] LIKE '%عاصم%'
+                         )
+                        THEN 'القاهره الجديده     '
+                    ELSE [Territory Name]
+                END AS Territory_Name,
+                [Governorate Name] AS Governorate_Name,
+                QTY AS Sales_Units,
+                FU AS Bonus_Units,
+                '{distributor.upper()}' AS Dist_name
+            FROM native_{distributor.lower()}
+            WHERE Month = ? AND Year = ?;
+        """, [month, year])
         st.success(f"Prep query executed for {prep_table}")
         return True
     except Exception as e:
         st.error(f"Prep query failed: {e}")
         return False
+
 
 # --- Streamlit UI ---
 st.title("Data Cleaning & Prep Pipeline")
