@@ -15,7 +15,6 @@ client = create_client_sync(
 
 # --- Export to native table with batch insert ---
 def export_to_native(table, df, month, year, batch_size=100):
-    """Insert cleaned data into native_<distributor> table in batches"""
     try:
         client.execute(f"DELETE FROM {table} WHERE Month = ? AND Year = ?", [month, year])
         st.info(f"Old rows deleted from {table}")
@@ -28,11 +27,10 @@ def export_to_native(table, df, month, year, batch_size=100):
         st.info("No rows to insert")
         return True
 
-    # Batch insert
     total_rows = len(rows)
     for start in range(0, total_rows, batch_size):
         batch = rows[start:start+batch_size]
-        cols = [f"[{c}]" for c in batch[0].keys()]  # wrap column names in []
+        cols = [f"[{c}]" for c in batch[0].keys()]
         placeholders = ",".join("?" for _ in cols)
         sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({placeholders})"
         try:
@@ -45,7 +43,7 @@ def export_to_native(table, df, month, year, batch_size=100):
     st.success(f"Exported {total_rows} rows to {table}")
     return True
 
-# --- Run prep query with hardcoded SQL ---
+# --- Run prep table with batch insert ---
 def run_prep_batch(distributor, month, year, batch_size=100):
     prep_table = f"prep_{distributor.lower()}"
 
@@ -60,7 +58,7 @@ def run_prep_batch(distributor, month, year, batch_size=100):
     # Fetch rows from native table
     try:
         rows = client.execute(f"SELECT * FROM native_{distributor.lower()} WHERE Month=? AND Year=?", [month, year])
-        rows = rows.fetchall()  # get list of rows
+        rows = rows.fetchall()
     except Exception as e:
         st.error(f"Failed to fetch rows from native table: {e}")
         return False
@@ -69,10 +67,9 @@ def run_prep_batch(distributor, month, year, batch_size=100):
         st.info("No rows to insert into prep table")
         return True
 
-    # Transform rows for prep logic (Territory_Name mapping)
+    # Apply prep logic
     prep_rows = []
     for r in rows:
-        # Map Territory_Name according to your rules
         territory = r["Territory Name"]
         governorate = r["Governorate Name"]
         if territory == "Template District                       ":
@@ -95,7 +92,7 @@ def run_prep_batch(distributor, month, year, batch_size=100):
             "Dist_name": distributor.upper()
         })
 
-    # Batch insert
+    # Batch insert into prep table
     total_rows = len(prep_rows)
     for start in range(0, total_rows, batch_size):
         batch = prep_rows[start:start+batch_size]
@@ -111,8 +108,6 @@ def run_prep_batch(distributor, month, year, batch_size=100):
 
     st.success(f"Inserted {total_rows} rows into {prep_table}")
     return True
-
-
 
 # --- Streamlit UI ---
 st.title("Data Cleaning & Prep Pipeline")
@@ -148,10 +143,11 @@ if uploaded_file:
             st.dataframe(df_cleaned.head(20))
 
             if export_to_native(f"native_{distributor.lower()}", df_cleaned, month, year):
-                run_prep(distributor, month, year)
+                run_prep_batch(distributor, month, year)
         else:
             st.error(df_cleaned)
 
+    # Clean up temporary file
     try:
         os.remove(temp_path)
     except:
