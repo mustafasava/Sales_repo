@@ -57,8 +57,8 @@ def run_prep_batch(distributor, month, year, batch_size=100):
 
     # Fetch rows from native table
     try:
-        rows = client.execute(f"SELECT * FROM native_{distributor.lower()} WHERE Month=? AND Year=?", [month, year])
-        rows = rows.fetchall()
+        res = client.execute(f"SELECT * FROM native_{distributor.lower()} WHERE Month=? AND Year=?", [month, year])
+        rows = res.rows  # correct way to get rows
     except Exception as e:
         st.error(f"Failed to fetch rows from native table: {e}")
         return False
@@ -67,7 +67,7 @@ def run_prep_batch(distributor, month, year, batch_size=100):
         st.info("No rows to insert into prep table")
         return True
 
-    # Apply prep logic
+    # Transform rows for prep logic
     prep_rows = []
     for r in rows:
         territory = r["Territory Name"]
@@ -92,7 +92,7 @@ def run_prep_batch(distributor, month, year, batch_size=100):
             "Dist_name": distributor.upper()
         })
 
-    # Batch insert into prep table
+    # Batch insert
     total_rows = len(prep_rows)
     for start in range(0, total_rows, batch_size):
         batch = prep_rows[start:start+batch_size]
