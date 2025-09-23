@@ -13,19 +13,12 @@ client = create_client_sync(
     auth_token=st.secrets["TURSO_AUTH_TOKEN"]
 )
 
-# --- Helper to escape values for SQL ---
-def escape_value(v):
-    if v is None:
-        return "NULL"
-    if isinstance(v, str):
-        return f"'{v.replace('\'','\'\'')}'"
-    return str(v)
-
 # --- Export to native table ---
 def export_to_native(table, df, month, year):
     """Insert cleaned data into native_<distributor> table"""
+    # Delete old rows
     try:
-        client.execute(f"DELETE FROM {table} WHERE Month = {month} AND Year = {year}")
+        client.execute(f"DELETE FROM {table} WHERE Month = ? AND Year = ?", [month, year])
         st.info(f"Old rows deleted from {table}")
     except:
         st.error("Failed to delete old rows")
@@ -36,12 +29,14 @@ def export_to_native(table, df, month, year):
         st.info("No rows to insert")
         return True
 
+    # Insert row by row using parameterized queries
     for i, row in enumerate(rows):
         cols = list(row.keys())
-        values = [escape_value(row[c]) for c in cols]
-        sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
+        placeholders = ",".join("?" for _ in cols)
+        sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({placeholders})"
+        values = [row[c] for c in cols]
         try:
-            client.execute(sql)  # NEVER store or read result
+            client.execute(sql, values)  # Parameterized query
         except:
             st.error(f"Failed to insert row {i+1}")
             return False
@@ -63,7 +58,7 @@ def run_prep(distributor, month, year):
 
     # Delete old rows
     try:
-        client.execute(f"DELETE FROM {prep_table} WHERE Month = {month} AND Year = {year}")
+        client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
         st.info(f"Old rows deleted from {prep_table}")
     except:
         st.error("Failed to delete old rows from prep table")
@@ -73,7 +68,7 @@ def run_prep(distributor, month, year):
     sql = sql.replace("{month}", str(month)).replace("{year}", str(year))
 
     try:
-        client.execute(sql)  # NEVER read result
+        client.execute(sql)  # Parameterized/prepared query
         st.success(f"Prep query executed for {prep_table}")
         return True
     except:
