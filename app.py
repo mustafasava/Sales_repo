@@ -28,6 +28,10 @@ def export_to_native(table, df, month, year):
 
 # --- Run prep query ---
 def run_prep(distributor, month, year):
+    """
+    Run the corresponding prep SQL file to populate prep_<distributor>.
+    Works with Turso Python client.
+    """
     query_file = f"queries/{distributor.lower()}_prep.sql"
     if not os.path.exists(query_file):
         st.error(f"Prep query not found: {query_file}")
@@ -37,9 +41,19 @@ def run_prep(distributor, month, year):
         sql = f.read()
 
     prep_table = f"prep_{distributor.lower()}"
-    client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", (month, year))
-    client.execute(sql, (month, year))
+
+    # Clean old rows
+    client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
+
+    # Insert new rows
+    res = client.execute(sql, [month, year])
+
+    # Optional: log how many rows inserted if result supports it
+    if res.rows is not None:
+        st.info(f"Inserted {len(res.rows)} rows into {prep_table}")
+
     return True
+
 
 
 # --- Streamlit UI ---
