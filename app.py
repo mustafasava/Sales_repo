@@ -36,9 +36,8 @@ def export_to_native(table, df, month, year, batch_size=100):
         placeholders = ",".join("?" for _ in cols)
         sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({placeholders})"
         try:
-            values_list = [list(row.values()) for row in batch]
-            for values in values_list:
-                client.execute(sql, values)
+            for row in batch:
+                client.execute(sql, list(row.values()))
         except Exception as e:
             st.error(f"Failed to insert rows {start+1}-{start+len(batch)}: {e}")
             return False
@@ -46,19 +45,10 @@ def export_to_native(table, df, month, year, batch_size=100):
     st.success(f"Exported {total_rows} rows to {table}")
     return True
 
-# --- Run prep query ---
+# --- Run prep query with hardcoded SQL ---
 def run_prep(distributor, month, year):
-    query_file = f"queries/{distributor.lower()}_prep.sql"
-    if not os.path.exists(query_file):
-        st.error(f"Prep query not found: {query_file}")
-        return False
-
-    with open(query_file, "r", encoding="utf-8") as f:
-        sql = f.read()
-
     prep_table = f"prep_{distributor.lower()}"
 
-    # Delete old rows
     try:
         client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
         st.info(f"Old rows deleted from {prep_table}")
@@ -66,7 +56,36 @@ def run_prep(distributor, month, year):
         st.error(f"Failed to delete old rows from prep table: {e}")
         return False
 
-    # Execute prep query with parameters
+    # Hardcoded prep SQL directly in execute
+    sql = f"""
+    INSERT INTO prep_{distributor.lower()} (Year,Month,Item_Code,Item_Name,Brick,Territory_Name,Governorate_Name,Sales_Units,Bonus_Units,Dist_name)
+    SELECT
+        Year,
+        Month,
+        [Item Code] AS Item_Code,
+        [Item Name] AS Item_Name,
+        Brick,
+        CASE 
+            WHEN [Territory Name] = 'Template District                       '
+                THEN [Brick Name]
+            WHEN [Territory Name] = 'QENA I /RED SEA RED SEA                 '
+                THEN [Governorate Name]
+            WHEN [Territory Name] = 'NASR CITY NASR CITY                     '
+                 AND (
+                     [Governorate Name] = 'القاهره الجديده     '
+                     OR [Governorate Name] LIKE '%عاصم%'
+                 )
+                THEN 'القاهره الجديده     '
+            ELSE [Territory Name]
+        END AS Territory_Name,
+        [Governorate Name] AS Governorate_Name,
+        QTY AS Sales_Units,
+        FU AS Bonus_Units,
+        '{distributor.upper()}' AS Dist_name
+    FROM native_{distributor.lower()}
+    WHERE Month = ? AND Year = ?;
+    """
+
     try:
         client.execute(sql, [month, year])
         st.success(f"Prep query executed for {prep_table}")
@@ -113,7 +132,6 @@ if uploaded_file:
         else:
             st.error(df_cleaned)
 
-    # Clean up temporary file
     try:
         os.remove(temp_path)
     except:
