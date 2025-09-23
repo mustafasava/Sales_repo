@@ -7,17 +7,11 @@ from libsql_client import create_client_sync
 from modules.cleaning.IBS_cln import ibs_cln
 # from modules.cleaning.EPDA_cln import epda_cln, etc.
 
-# --- Turso clients ---
-client_sync = create_client_sync(
+# --- Turso client ---
+client = create_client_sync(
     url=st.secrets["TURSO_URL"],
     auth_token=st.secrets["TURSO_AUTH_TOKEN"]
 )
-
-client_exec = create_client_sync(
-    url=st.secrets["TURSO_URL"],
-    auth_token=st.secrets["TURSO_AUTH_TOKEN"]
-)
-
 
 # --- Helper to escape values for SQL ---
 def escape_value(v):
@@ -27,24 +21,15 @@ def escape_value(v):
         return f"'{v.replace('\'','\'\'')}'"
     return str(v)
 
-
-# --- Safe execute for INSERT/DELETE/UPDATE ---
-def safe_execute(sql):
-    try:
-        client_exec.execute(sql)  # Do not read .rows
-    except Exception as e:
-        st.error(f"Query failed: {e}")
-        raise
-
-
 # --- Export to native table ---
 def export_to_native(table, df, month, year):
     """Insert cleaned data into native_<distributor> table"""
     # Delete old rows
     try:
-        safe_execute(f"DELETE FROM {table} WHERE Month = {month} AND Year = {year}")
+        client.execute(f"DELETE FROM {table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {table}")
-    except Exception:
+    except Exception as e:
+        st.error(f"Failed to delete old rows: {e}")
         return False
 
     rows = df.to_dict(orient="records")
@@ -58,14 +43,13 @@ def export_to_native(table, df, month, year):
         values = [escape_value(row[c]) for c in cols]
         sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
         try:
-            safe_execute(sql)
-        except Exception:
-            st.error(f"Failed to insert row {i+1}")
+            client.execute(sql)  # Do NOT store result or access .rows
+        except Exception as e:
+            st.error(f"Failed to insert row {i+1}: {e}")
             return False
 
     st.success(f"Exported {len(rows)} rows to {table}")
     return True
-
 
 # --- Run prep query ---
 def run_prep(distributor, month, year):
@@ -82,21 +66,22 @@ def run_prep(distributor, month, year):
 
     # Delete old rows
     try:
-        safe_execute(f"DELETE FROM {prep_table} WHERE Month = {month} AND Year = {year}")
+        client.execute(f"DELETE FROM {prep_table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {prep_table}")
-    except Exception:
+    except Exception as e:
+        st.error(f"Failed to delete old rows from prep table: {e}")
         return False
 
     # Inline month/year if placeholders exist
     sql = sql.replace("{month}", str(month)).replace("{year}", str(year))
 
     try:
-        safe_execute(sql)
+        client.execute(sql)  # Do NOT access result
         st.success(f"Prep query executed for {prep_table}")
         return True
-    except Exception:
+    except Exception as e:
+        st.error(f"Prep query failed: {e}")
         return False
-
 
 # --- Streamlit UI ---
 st.title("Data Cleaning & Prep Pipeline")
