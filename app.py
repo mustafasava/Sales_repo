@@ -42,12 +42,15 @@ def run_prep(distributor, month, year):
 
     res = client.execute(sql, [month, year])
 
-    # show how many rows got inserted
-    if res.rows is not None:
-        st.info(f"Inserted {len(res.rows)} rows into {prep_table}")
-    else:
+    # get number of rows inserted (if INSERT returns anything)
+    try:
+        inserted_rows = len(res.fetchall())
+        st.info(f"Inserted {inserted_rows} rows into {prep_table}")
+    except:
         st.info(f"Prep query executed for {prep_table}")
+
     return True
+
 
 
 # --- Streamlit UI ---
