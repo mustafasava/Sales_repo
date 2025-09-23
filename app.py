@@ -32,9 +32,16 @@ def clean_dataframe(df):
     # Replace NaN with None for SQL compatibility
     df = df.where(pd.notnull(df), None)
     
-    # Convert all columns to string to avoid data type issues
+    # Convert numeric columns to appropriate types
     for col in df.columns:
-        df[col] = df[col].astype(str)
+        if df[col].dtype in ['float64', 'int64']:
+            # Convert numeric columns to proper Python types
+            df[col] = df[col].astype(object)  # Convert to Python objects
+            df[col] = df[col].where(pd.notnull(df[col]), None)
+        else:
+            # Convert string columns, handling NaN
+            df[col] = df[col].astype(str)
+            df[col] = df[col].replace('nan', None).replace('None', None)
     
     return df
 
@@ -47,7 +54,7 @@ def export_to_native(table, df, month, year):
         
         # Delete old rows
         try:
-            delete_result = client.execute(
+            result = client.execute(
                 f"DELETE FROM {table} WHERE Month = ? AND Year = ?", 
                 [month, year]
             )
@@ -91,13 +98,17 @@ def export_to_native(table, df, month, year):
             try:
                 values = [row[c] for c in cols]
                 
-                # Debug first few rows
-                if i < 3:  # Show details for first 3 rows
-                    with st.expander(f"🔧 Row {i+1} Details"):
+                # Debug first row
+                if i == 0:
+                    with st.expander("🔧 First Row Details"):
                         st.write("📝 SQL:", sql)
                         st.write("📦 Values:", values)
+                        st.write("📦 Values types:", [type(v) for v in values])
                 
-                client.execute(sql, values)
+                # Execute the query - LibSQL client returns a result object
+                result = client.execute(sql, values)
+                
+                # If we get here, the query executed successfully
                 success_count += 1
                 
                 # Update progress
@@ -109,14 +120,10 @@ def export_to_native(table, df, month, year):
                 st.error(f"❌ Failed to insert row {i+1}: {str(e)}")
                 st.write("💥 Problematic row data:", row)
                 
-                # Try to identify the problematic column
+                # More detailed error analysis
+                st.write("🔍 Detailed error analysis:")
                 for col_name, value in row.items():
-                    try:
-                        test_sql = f"INSERT INTO {table} ({col_name}) VALUES (?)"
-                        client.execute(test_sql, [value])
-                    except Exception as col_error:
-                        st.error(f"❌ Problem with column '{col_name}', value: '{value}'")
-                        st.error(f"Column error: {col_error}")
+                    st.write(f"   {col_name}: '{value}' (type: {type(value)})")
                 
                 return False
 
@@ -127,6 +134,9 @@ def export_to_native(table, df, month, year):
         
     except Exception as e:
         st.error(f"💥 Unexpected error in export_to_native: {str(e)}")
+        import traceback
+        st.write("📋 Full traceback:")
+        st.code(traceback.format_exc())
         return False
 
 # --- Run prep query ---
@@ -144,7 +154,7 @@ def run_prep(distributor, month, year):
 
     # Delete old rows
     try:
-        client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
+        result = client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
         st.info(f"🗑️ Old rows deleted from {prep_table}")
     except Exception as e:
         st.error(f"❌ Failed to delete old rows from prep table: {str(e)}")
@@ -154,12 +164,57 @@ def run_prep(distributor, month, year):
     sql = sql.replace("{month}", str(month)).replace("{year}", str(year))
 
     try:
-        client.execute(sql)
+        result = client.execute(sql)
         st.success(f"✅ Prep query executed successfully for {prep_table}")
         return True
     except Exception as e:
         st.error(f"❌ Prep query failed: {str(e)}")
         st.code(sql)  # Show the SQL for debugging
+        return False
+
+# --- Alternative batch insertion method ---
+def export_to_native_batch(table, df, month, year):
+    """Alternative method using batch insertion"""
+    try:
+        # Clean the DataFrame
+        df_cleaned = clean_dataframe(df.copy())
+        
+        # Delete old rows
+        try:
+            result = client.execute(
+                f"DELETE FROM {table} WHERE Month = ? AND Year = ?", 
+                [month, year]
+            )
+            st.info(f"🗑️ Old rows deleted from {table}")
+        except Exception as e:
+            st.error(f"❌ Failed to delete old rows: {str(e)}")
+            return False
+
+        # Convert to list of tuples for batch insertion
+        data_tuples = [tuple(row) for row in df_cleaned.itertuples(index=False)]
+        cols = df_cleaned.columns.tolist()
+        placeholders = ",".join("?" for _ in cols)
+        
+        sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({placeholders})"
+        
+        st.write(f"🚀 Batch inserting {len(data_tuples)} rows into {table}...")
+        
+        # Try batch execution
+        success_count = 0
+        for i, row_tuple in enumerate(data_tuples):
+            try:
+                result = client.execute(sql, list(row_tuple))
+                success_count += 1
+            except Exception as e:
+                st.error(f"❌ Failed to insert row {i+1}: {str(e)}")
+                st.write("💥 Problematic row:", row_tuple)
+                return False
+        
+        st.success(f"✅ Successfully exported {success_count} rows to {table}")
+        return True
+        
+    except Exception as e:
+        st.error(f"💥 Unexpected error in batch export: {str(e)}")
         return False
 
 # --- Streamlit UI ---
@@ -201,7 +256,6 @@ if uploaded_file:
     # Run cleaning process
     st.header("🔧 Data Cleaning")
     
-    # Use a form or separate button logic to avoid reruns
     if st.button("🚀 Start Cleaning Process", type="primary", key="clean_btn"):
         with st.spinner("Cleaning data..."):
             if distributor == "IBS":
@@ -239,6 +293,11 @@ if uploaded_file:
                     st.metric("Columns", df_cleaned.shape[1])
                 with col3:
                     st.metric("Period", f"{month}-{year}" if month and year else "N/A")
+                
+                # Show data types
+                with st.expander("🔍 Data Types Info"):
+                    st.write("DataFrame dtypes:")
+                    st.write(df_cleaned.dtypes)
             else:
                 st.error(f"❌ Cleaning failed: {df_cleaned}")
 
@@ -255,15 +314,32 @@ if uploaded_file:
         # Display current state info
         st.info(f"Ready to export: {st.session_state.distributor} data for {st.session_state.month}-{st.session_state.year}")
         
+        # Let user choose insertion method
+        insertion_method = st.radio(
+            "Insertion Method:",
+            ["Standard", "Batch"],
+            help="Try Batch method if Standard fails"
+        )
+        
         if st.button("💾 Export to Database", type="secondary", key="export_btn"):
             if st.session_state.month and st.session_state.year:
                 with st.spinner("Exporting to database..."):
-                    if export_to_native(
-                        f"native_{st.session_state.distributor.lower()}", 
-                        st.session_state.cleaned_data, 
-                        st.session_state.month, 
-                        st.session_state.year
-                    ):
+                    if insertion_method == "Standard":
+                        success = export_to_native(
+                            f"native_{st.session_state.distributor.lower()}", 
+                            st.session_state.cleaned_data, 
+                            st.session_state.month, 
+                            st.session_state.year
+                        )
+                    else:
+                        success = export_to_native_batch(
+                            f"native_{st.session_state.distributor.lower()}", 
+                            st.session_state.cleaned_data, 
+                            st.session_state.month, 
+                            st.session_state.year
+                        )
+                    
+                    if success:
                         st.success("✅ Data exported successfully!")
                         
                         # Run prep query
@@ -271,9 +347,6 @@ if uploaded_file:
                         with st.spinner("Running preparation query..."):
                             if run_prep(st.session_state.distributor, st.session_state.month, st.session_state.year):
                                 st.success("🎉 Pipeline completed successfully!")
-                                
-                                # Clear session state if needed
-                                # st.session_state.cleaned_data = None
                             else:
                                 st.error("❌ Preparation query failed")
                     else:
@@ -299,24 +372,15 @@ with st.expander("📖 How to use this app"):
     2. **Select** the appropriate distributor from the dropdown
     3. **Click** "Start Cleaning Process" to clean the data
     4. **Review** the cleaned data preview
-    5. **Click** "Export to Database" to save to Turso database
-    6. **Monitor** the progress and debug information
+    5. **Choose** insertion method (Standard or Batch)
+    6. **Click** "Export to Database" to save to Turso database
 
-    ### Supported Distributors:
-    - ✅ IBS (Implemented)
-    - ❌ EPDA (Coming soon)
-    - ❌ POS (Coming soon)
-    - ❌ Sofico (Coming soon)
-    - ❌ Egydrug_Sales (Coming soon)
-
-    ### Features:
-    - 🔍 Detailed debugging information
-    - 📊 Data preview and statistics
-    - 🗑️ Automatic cleanup of old data
-    - ✅ Comprehensive error handling
-    - 📈 Progress tracking
+    ### Troubleshooting:
+    - If Standard method fails, try Batch method
+    - Check the debug information for data type issues
+    - Verify your table schema matches the data
     """)
 
 # Footer
 st.markdown("---")
-st.markdown("*Data Cleaning Pipeline v2.0 - Enhanced with better error handling*")
+st.markdown("*Data Cleaning Pipeline v2.1 - Fixed LibSQL client handling*")
