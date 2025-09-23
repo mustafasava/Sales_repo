@@ -58,34 +58,12 @@ def run_prep(distributor, month, year):
 
     # Execute prep SQL directly
     try:
-        client.execute(f"""
-            INSERT INTO prep_{distributor.lower()} (Year,Month,Item_Code,Item_Name,Brick,Territory_Name,Governorate_Name,Sales_Units,Bonus_Units,Dist_name)
-            SELECT
-                Year,
-                Month,
-                [Item Code] AS Item_Code,
-                [Item Name] AS Item_Name,
-                Brick,
-                CASE 
-                    WHEN [Territory Name] = 'Template District                       '
-                        THEN [Brick Name]
-                    WHEN [Territory Name] = 'QENA I /RED SEA RED SEA                 '
-                        THEN [Governorate Name]
-                    WHEN [Territory Name] = 'NASR CITY NASR CITY                     '
-                         AND (
-                             [Governorate Name] = 'القاهره الجديده     '
-                             OR [Governorate Name] LIKE '%عاصم%'
-                         )
-                        THEN 'القاهره الجديده     '
-                    ELSE [Territory Name]
-                END AS Territory_Name,
-                [Governorate Name] AS Governorate_Name,
-                QTY AS Sales_Units,
-                FU AS Bonus_Units,
-                '{distributor.upper()}' AS Dist_name
-            FROM native_{distributor.lower()}
-            WHERE Month = ? AND Year = ?;
-        """, [month, year])
+        client.execute(client.execute(f"INSERT INTO prep_ibs (Year,Month,Item_Code,Item_Name,Brick,Territory_Name,Governorate_Name,Sales_Units,Bonus_Units,Dist_name) "
+               f"SELECT Year,Month,[Item Code] AS Item_Code,[Item Name] AS Item_Name,Brick,CASE WHEN [Territory Name]='Template District                       ' THEN [Brick Name] "
+               f"WHEN [Territory Name]='QENA I /RED SEA RED SEA                 ' THEN [Governorate Name] "
+               f"WHEN [Territory Name]='NASR CITY NASR CITY                     ' AND ([Governorate Name]='القاهره الجديده     ' OR [Governorate Name] LIKE '%عاصم%') THEN 'القاهره الجديده     ' "
+               f"ELSE [Territory Name] END AS Territory_Name,[Governorate Name] AS Governorate_Name,QTY AS Sales_Units,FU AS Bonus_Units,'IBS' AS Dist_name "
+               f"FROM native_ibs WHERE Month=? AND Year=?;", [month, year]))
         st.success(f"Prep query executed for {prep_table}")
         return True
     except Exception as e:
