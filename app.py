@@ -13,7 +13,7 @@ db_token = st.secrets["TURSO_AUTH_TOKEN"]
 client = create_client_sync(url=db_url, auth_token=db_token)
 
 
-# --- Helper to escape values for SQL ---
+# --- Helper to escape values ---
 def escape_value(v):
     if v is None:
         return "NULL"
@@ -26,7 +26,8 @@ def escape_value(v):
 def export_to_native(table, df, month, year):
     """Insert cleaned data into native_<distributor> table"""
     try:
-        client.execute(f"DELETE FROM {table} WHERE Month = {month} AND Year = {year}")
+        with client:
+            client.execute(f"DELETE FROM {table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {table}")
     except Exception as e:
         st.error(f"Failed to delete old rows: {e}")
@@ -38,7 +39,8 @@ def export_to_native(table, df, month, year):
         values = [escape_value(row[c]) for c in cols]
         sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
         try:
-            client.execute(sql)  # DO NOT pass parameter list!
+            with client:
+                client.execute(sql)
         except Exception as e:
             st.error(f"Failed to insert row {i+1}: {e}")
             return False
@@ -61,17 +63,19 @@ def run_prep(distributor, month, year):
     prep_table = f"prep_{distributor.lower()}"
 
     try:
-        client.execute(f"DELETE FROM {prep_table} WHERE Month = {month} AND Year = {year}")
+        with client:
+            client.execute(f"DELETE FROM {prep_table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {prep_table}")
     except Exception as e:
         st.error(f"Failed to delete old rows from prep table: {e}")
         return False
 
-    # Inline month/year if prep SQL uses {month}/{year} placeholders
+    # Inline month/year in SQL if using placeholders {month}/{year}
     sql = sql.replace("{month}", str(month)).replace("{year}", str(year))
 
     try:
-        client.execute(sql)
+        with client:
+            client.execute(sql)
         st.success(f"Prep query executed for {prep_table}")
         return True
     except Exception as e:
