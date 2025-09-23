@@ -46,29 +46,72 @@ def export_to_native(table, df, month, year, batch_size=100):
     return True
 
 # --- Run prep query with hardcoded SQL ---
-def run_prep(distributor, month, year):
+def run_prep_batch(distributor, month, year, batch_size=100):
     prep_table = f"prep_{distributor.lower()}"
 
+    # Delete old rows
     try:
-        client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
+        client.execute(f"DELETE FROM {prep_table} WHERE Month=? AND Year=?", [month, year])
         st.info(f"Old rows deleted from {prep_table}")
     except Exception as e:
         st.error(f"Failed to delete old rows from prep table: {e}")
         return False
 
-    # Execute prep SQL directly
+    # Fetch rows from native table
     try:
-        client.execute(client.execute(f"INSERT INTO prep_ibs (Year,Month,Item_Code,Item_Name,Brick,Territory_Name,Governorate_Name,Sales_Units,Bonus_Units,Dist_name) "
-               f"SELECT Year,Month,[Item Code] AS Item_Code,[Item Name] AS Item_Name,Brick,CASE WHEN [Territory Name]='Template District                       ' THEN [Brick Name] "
-               f"WHEN [Territory Name]='QENA I /RED SEA RED SEA                 ' THEN [Governorate Name] "
-               f"WHEN [Territory Name]='NASR CITY NASR CITY                     ' AND ([Governorate Name]='القاهره الجديده     ' OR [Governorate Name] LIKE '%عاصم%') THEN 'القاهره الجديده     ' "
-               f"ELSE [Territory Name] END AS Territory_Name,[Governorate Name] AS Governorate_Name,QTY AS Sales_Units,FU AS Bonus_Units,'IBS' AS Dist_name "
-               f"FROM native_ibs WHERE Month=? AND Year=?;", [month, year]))
-        st.success(f"Prep query executed for {prep_table}")
-        return True
+        rows = client.execute(f"SELECT * FROM native_{distributor.lower()} WHERE Month=? AND Year=?", [month, year])
+        rows = rows.fetchall()  # get list of rows
     except Exception as e:
-        st.error(f"Prep query failed: {e}")
+        st.error(f"Failed to fetch rows from native table: {e}")
         return False
+
+    if not rows:
+        st.info("No rows to insert into prep table")
+        return True
+
+    # Transform rows for prep logic (Territory_Name mapping)
+    prep_rows = []
+    for r in rows:
+        # Map Territory_Name according to your rules
+        territory = r["Territory Name"]
+        governorate = r["Governorate Name"]
+        if territory == "Template District                       ":
+            territory = r["Brick Name"]
+        elif territory == "QENA I /RED SEA RED SEA                 ":
+            territory = governorate
+        elif territory == "NASR CITY NASR CITY                     " and ("القاهره الجديده     " in governorate or "عاصم" in governorate):
+            territory = "القاهره الجديده     "
+
+        prep_rows.append({
+            "Year": r["Year"],
+            "Month": r["Month"],
+            "Item_Code": r["Item Code"],
+            "Item_Name": r["Item Name"],
+            "Brick": r["Brick"],
+            "Territory_Name": territory,
+            "Governorate_Name": governorate,
+            "Sales_Units": r["QTY"],
+            "Bonus_Units": r["FU"],
+            "Dist_name": distributor.upper()
+        })
+
+    # Batch insert
+    total_rows = len(prep_rows)
+    for start in range(0, total_rows, batch_size):
+        batch = prep_rows[start:start+batch_size]
+        cols = [f"[{c}]" for c in batch[0].keys()]
+        placeholders = ",".join("?" for _ in cols)
+        sql = f"INSERT INTO {prep_table} ({','.join(cols)}) VALUES ({placeholders})"
+        try:
+            for row in batch:
+                client.execute(sql, list(row.values()))
+        except Exception as e:
+            st.error(f"Failed to insert prep rows {start+1}-{start+len(batch)}: {e}")
+            return False
+
+    st.success(f"Inserted {total_rows} rows into {prep_table}")
+    return True
+
 
 
 # --- Streamlit UI ---
