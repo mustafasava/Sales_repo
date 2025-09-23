@@ -13,15 +13,14 @@ client = create_client_sync(
     auth_token=st.secrets["TURSO_AUTH_TOKEN"]
 )
 
-# --- Export to native table ---
-def export_to_native(table, df, month, year):
-    """Insert cleaned data into native_<distributor> table"""
-    # Delete old rows
+# --- Export to native table with batch insert ---
+def export_to_native(table, df, month, year, batch_size=100):
+    """Insert cleaned data into native_<distributor> table in batches"""
     try:
         client.execute(f"DELETE FROM {table} WHERE Month = ? AND Year = ?", [month, year])
         st.info(f"Old rows deleted from {table}")
-    except:
-        st.error("Failed to delete old rows")
+    except Exception as e:
+        st.error(f"Failed to delete old rows: {e}")
         return False
 
     rows = df.to_dict(orient="records")
@@ -29,19 +28,22 @@ def export_to_native(table, df, month, year):
         st.info("No rows to insert")
         return True
 
-    for i, row in enumerate(rows):
-        # Wrap all column names in []
-        cols = [f"[{c}]" for c in row.keys()]
+    # Batch insert
+    total_rows = len(rows)
+    for start in range(0, total_rows, batch_size):
+        batch = rows[start:start+batch_size]
+        cols = [f"[{c}]" for c in batch[0].keys()]  # wrap column names in []
         placeholders = ",".join("?" for _ in cols)
         sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({placeholders})"
-        values = [row[c] for c in row.keys()]
         try:
-            client.execute(sql, values)
-        except:
-            st.error(f"Failed to insert row {i+1}")
+            values_list = [list(row.values()) for row in batch]
+            for values in values_list:
+                client.execute(sql, values)
+        except Exception as e:
+            st.error(f"Failed to insert rows {start+1}-{start+len(batch)}: {e}")
             return False
 
-    st.success(f"Exported {len(rows)} rows to {table}")
+    st.success(f"Exported {total_rows} rows to {table}")
     return True
 
 # --- Run prep query ---
@@ -60,19 +62,17 @@ def run_prep(distributor, month, year):
     try:
         client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
         st.info(f"Old rows deleted from {prep_table}")
-    except:
-        st.error("Failed to delete old rows from prep table")
+    except Exception as e:
+        st.error(f"Failed to delete old rows from prep table: {e}")
         return False
 
-    # Replace placeholders if exist
-    sql = sql.replace("{month}", str(month)).replace("{year}", str(year))
-
+    # Execute prep query with parameters
     try:
-        client.execute(sql)  # prep query execution
+        client.execute(sql, [month, year])
         st.success(f"Prep query executed for {prep_table}")
         return True
-    except:
-        st.error("Prep query failed")
+    except Exception as e:
+        st.error(f"Prep query failed: {e}")
         return False
 
 # --- Streamlit UI ---
