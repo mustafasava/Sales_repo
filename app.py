@@ -17,7 +17,7 @@ client = create_client_sync(url=db_url, auth_token=db_token)
 def export_to_native(table, df, month, year):
     """Insert cleaned data into native_<distributor> table"""
     try:
-        client.execute(f"DELETE FROM {table} WHERE Month = ? AND Year = ?", [month, year])
+        client.execute_sync(f"DELETE FROM {table} WHERE Month = ? AND Year = ?", [month, year])
         st.info(f"Old rows deleted from {table}")
     except Exception as e:
         st.error(f"Failed to delete old rows: {e}")
@@ -26,10 +26,9 @@ def export_to_native(table, df, month, year):
     rows = df.to_dict(orient="records")
     for i, row in enumerate(rows):
         cols = list(row.keys())
-        placeholders = ",".join("?" * len(cols))
-        sql = f'INSERT INTO {table} ({",".join(cols)}) VALUES ({placeholders})'
+        sql = f'INSERT INTO {table} ({",".join(cols)}) VALUES ({",".join("?" * len(cols))})'
         try:
-            client.execute(sql, list(row.values()))
+            client.execute_sync(sql, list(row.values()))
         except Exception as e:
             st.error(f"Failed to insert row {i+1}: {e}")
             return False
@@ -51,17 +50,15 @@ def run_prep(distributor, month, year):
 
     prep_table = f"prep_{distributor.lower()}"
 
-    # Delete old rows first
     try:
-        client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
+        client.execute_sync(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
         st.info(f"Old rows deleted from {prep_table}")
     except Exception as e:
         st.error(f"Failed to delete old rows from prep table: {e}")
         return False
 
-    # Run prep query
     try:
-        client.execute(sql, [month, year])
+        client.execute_sync(sql, [month, year])
         st.success(f"Prep query executed for {prep_table}")
         return True
     except Exception as e:
@@ -104,14 +101,15 @@ if uploaded_file:
             st.success(f"Cleaned {distributor} data for {month}-{year}")
             st.dataframe(df_cleaned.head(20))
 
-            # Export and prep
+            # Export to native table
             if export_to_native(f"native_{distributor.lower()}", df_cleaned, month, year):
+                # Run prep
                 run_prep(distributor, month, year)
 
         else:
             st.error(df_cleaned)
 
-    # Clean up temp file
+    # Clean up temporary file
     try:
         os.remove(temp_path)
     except:
