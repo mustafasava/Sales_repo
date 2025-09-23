@@ -24,12 +24,11 @@ def escape_value(v):
 # --- Export to native table ---
 def export_to_native(table, df, month, year):
     """Insert cleaned data into native_<distributor> table"""
-    # Delete old rows
     try:
         client.execute(f"DELETE FROM {table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {table}")
-    except Exception as e:
-        st.error(f"Failed to delete old rows: {e}")
+    except:
+        st.error("Failed to delete old rows")
         return False
 
     rows = df.to_dict(orient="records")
@@ -37,15 +36,14 @@ def export_to_native(table, df, month, year):
         st.info("No rows to insert")
         return True
 
-    # Insert row by row
     for i, row in enumerate(rows):
         cols = list(row.keys())
         values = [escape_value(row[c]) for c in cols]
         sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
         try:
-            client.execute(sql)  # Do NOT store result or access .rows
-        except Exception as e:
-            st.error(f"Failed to insert row {i+1}: {e}")
+            client.execute(sql)  # NEVER store or read result
+        except:
+            st.error(f"Failed to insert row {i+1}")
             return False
 
     st.success(f"Exported {len(rows)} rows to {table}")
@@ -53,7 +51,6 @@ def export_to_native(table, df, month, year):
 
 # --- Run prep query ---
 def run_prep(distributor, month, year):
-    """Run the prep SQL query to populate prep_<distributor>"""
     query_file = f"queries/{distributor.lower()}_prep.sql"
     if not os.path.exists(query_file):
         st.error(f"Prep query not found: {query_file}")
@@ -68,19 +65,19 @@ def run_prep(distributor, month, year):
     try:
         client.execute(f"DELETE FROM {prep_table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {prep_table}")
-    except Exception as e:
-        st.error(f"Failed to delete old rows from prep table: {e}")
+    except:
+        st.error("Failed to delete old rows from prep table")
         return False
 
-    # Inline month/year if placeholders exist
+    # Replace placeholders if exist
     sql = sql.replace("{month}", str(month)).replace("{year}", str(year))
 
     try:
-        client.execute(sql)  # Do NOT access result
+        client.execute(sql)  # NEVER read result
         st.success(f"Prep query executed for {prep_table}")
         return True
-    except Exception as e:
-        st.error(f"Prep query failed: {e}")
+    except:
+        st.error("Prep query failed")
         return False
 
 # --- Streamlit UI ---
@@ -116,15 +113,12 @@ if uploaded_file:
             st.success(f"Cleaned {distributor} data for {month}-{year}")
             st.dataframe(df_cleaned.head(20))
 
-            # Export to native table
             if export_to_native(f"native_{distributor.lower()}", df_cleaned, month, year):
-                # Run prep
                 run_prep(distributor, month, year)
-
         else:
             st.error(df_cleaned)
 
-    # Clean up temporary file
+    # Clean up
     try:
         os.remove(temp_path)
     except:
