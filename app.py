@@ -13,7 +13,7 @@ db_token = st.secrets["TURSO_AUTH_TOKEN"]
 client = create_client_sync(url=db_url, auth_token=db_token)
 
 
-# --- Helper to escape values for SQL ---
+# --- Helper to escape values ---
 def escape_value(v):
     if v is None:
         return "NULL"
@@ -24,9 +24,10 @@ def escape_value(v):
 
 # --- Export to native table ---
 def export_to_native(table, df, month, year):
-    """Insert cleaned data into native_<distributor> table in one query"""
+    """Insert cleaned data into native_<distributor> table"""
+    # Delete old rows
     try:
-        client.execute(f"DELETE FROM {table} WHERE Month = {month} AND Year = {year}")
+        client.execute_raw(f"DELETE FROM {table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {table}")
     except Exception as e:
         st.error(f"Failed to delete old rows: {e}")
@@ -37,25 +38,24 @@ def export_to_native(table, df, month, year):
         st.info("No rows to insert")
         return True
 
-    cols = list(rows[0].keys())
-    values_list = []
-    for row in rows:
+    # Insert row by row safely using execute_raw
+    for i, row in enumerate(rows):
+        cols = list(row.keys())
         values = [escape_value(row[c]) for c in cols]
-        values_list.append(f"({','.join(values)})")
+        sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
+        try:
+            client.execute_raw(sql)
+        except Exception as e:
+            st.error(f"Failed to insert row {i+1}: {e}")
+            return False
 
-    sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES " + ",".join(values_list)
-
-    try:
-        client.execute(sql)
-        st.success(f"Exported {len(rows)} rows to {table}")
-        return True
-    except Exception as e:
-        st.error(f"Failed to insert rows: {e}")
-        return False
+    st.success(f"Exported {len(rows)} rows to {table}")
+    return True
 
 
 # --- Run prep query ---
 def run_prep(distributor, month, year):
+    """Run the prep SQL query to populate prep_<distributor>"""
     query_file = f"queries/{distributor.lower()}_prep.sql"
     if not os.path.exists(query_file):
         st.error(f"Prep query not found: {query_file}")
@@ -66,18 +66,19 @@ def run_prep(distributor, month, year):
 
     prep_table = f"prep_{distributor.lower()}"
 
+    # Delete old rows
     try:
-        client.execute(f"DELETE FROM {prep_table} WHERE Month = {month} AND Year = {year}")
+        client.execute_raw(f"DELETE FROM {prep_table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {prep_table}")
     except Exception as e:
         st.error(f"Failed to delete old rows from prep table: {e}")
         return False
 
-    # Inline month/year if SQL uses placeholders
+    # Inline month/year if placeholders exist
     sql = sql.replace("{month}", str(month)).replace("{year}", str(year))
 
     try:
-        client.execute(sql)
+        client.execute_raw(sql)
         st.success(f"Prep query executed for {prep_table}")
         return True
     except Exception as e:
@@ -126,7 +127,7 @@ if uploaded_file:
         else:
             st.error(df_cleaned)
 
-    # Clean up
+    # Clean up temporary file
     try:
         os.remove(temp_path)
     except:
