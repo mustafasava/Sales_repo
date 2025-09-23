@@ -4,7 +4,7 @@ from github import Github
 
 # -------- GitHub Setup --------
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # stored in Streamlit secrets
-GITHUB_REPO = "your-username/your-repo"   # change to your repo
+GITHUB_REPO = "mustafasava/Sales_repo"   # change to your repo
 SAVE_FOLDER = "cleaned_src"
 
 g = Github(GITHUB_TOKEN)
