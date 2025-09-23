@@ -7,10 +7,16 @@ from libsql_client import create_client_sync
 from modules.cleaning.IBS_cln import ibs_cln
 # from modules.cleaning.EPDA_cln import epda_cln, etc.
 
-# --- Turso connection ---
-db_url = st.secrets["TURSO_URL"]
-db_token = st.secrets["TURSO_AUTH_TOKEN"]
-client = create_client_sync(url=db_url, auth_token=db_token)
+# --- Turso clients ---
+client_sync = create_client_sync(
+    url=st.secrets["TURSO_URL"],
+    auth_token=st.secrets["TURSO_AUTH_TOKEN"]
+)
+
+client_exec = create_client_sync(
+    url=st.secrets["TURSO_URL"],
+    auth_token=st.secrets["TURSO_AUTH_TOKEN"]
+)
 
 
 # --- Helper to escape values for SQL ---
@@ -22,15 +28,23 @@ def escape_value(v):
     return str(v)
 
 
+# --- Safe execute for INSERT/DELETE/UPDATE ---
+def safe_execute(sql):
+    try:
+        client_exec.execute(sql)  # Do not read .rows
+    except Exception as e:
+        st.error(f"Query failed: {e}")
+        raise
+
+
 # --- Export to native table ---
 def export_to_native(table, df, month, year):
     """Insert cleaned data into native_<distributor> table"""
     # Delete old rows
     try:
-        client.execute(f"DELETE FROM {table} WHERE Month = {month} AND Year = {year}")
+        safe_execute(f"DELETE FROM {table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {table}")
-    except Exception as e:
-        st.error(f"Failed to delete old rows: {e}")
+    except Exception:
         return False
 
     rows = df.to_dict(orient="records")
@@ -38,15 +52,15 @@ def export_to_native(table, df, month, year):
         st.info("No rows to insert")
         return True
 
-    # Insert row by row safely
+    # Insert row by row
     for i, row in enumerate(rows):
         cols = list(row.keys())
         values = [escape_value(row[c]) for c in cols]
         sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
         try:
-            client.execute(sql)  # Do NOT try to read result
-        except Exception as e:
-            st.error(f"Failed to insert row {i+1}: {e}")
+            safe_execute(sql)
+        except Exception:
+            st.error(f"Failed to insert row {i+1}")
             return False
 
     st.success(f"Exported {len(rows)} rows to {table}")
@@ -68,21 +82,19 @@ def run_prep(distributor, month, year):
 
     # Delete old rows
     try:
-        client.execute(f"DELETE FROM {prep_table} WHERE Month = {month} AND Year = {year}")
+        safe_execute(f"DELETE FROM {prep_table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {prep_table}")
-    except Exception as e:
-        st.error(f"Failed to delete old rows from prep table: {e}")
+    except Exception:
         return False
 
     # Inline month/year if placeholders exist
     sql = sql.replace("{month}", str(month)).replace("{year}", str(year))
 
     try:
-        client.execute(sql)  # Do NOT try to read result
+        safe_execute(sql)
         st.success(f"Prep query executed for {prep_table}")
         return True
-    except Exception as e:
-        st.error(f"Prep query failed: {e}")
+    except Exception:
         return False
 
 
