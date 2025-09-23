@@ -13,11 +13,20 @@ db_token = st.secrets["TURSO_AUTH_TOKEN"]
 client = create_client_sync(url=db_url, auth_token=db_token)
 
 
+# --- Helper to escape values ---
+def escape_value(v):
+    if v is None:
+        return "NULL"
+    if isinstance(v, str):
+        return f"'{v.replace('\'','\'\'')}'"  # escape single quotes
+    return str(v)
+
+
 # --- Export to native table ---
 def export_to_native(table, df, month, year):
     """Insert cleaned data into native_<distributor> table"""
     try:
-        client.execute(f"DELETE FROM {table} WHERE Month = ? AND Year = ?", [month, year])
+        client.execute(f"DELETE FROM {table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {table}")
     except Exception as e:
         st.error(f"Failed to delete old rows: {e}")
@@ -26,10 +35,10 @@ def export_to_native(table, df, month, year):
     rows = df.to_dict(orient="records")
     for i, row in enumerate(rows):
         cols = list(row.keys())
-        placeholders = ",".join("?" * len(cols))
-        sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({placeholders})"
+        values = [escape_value(row[c]) for c in cols]
+        sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
         try:
-            client.execute(sql, list(row.values()))
+            client.execute(sql)
         except Exception as e:
             st.error(f"Failed to insert row {i+1}: {e}")
             return False
@@ -52,14 +61,17 @@ def run_prep(distributor, month, year):
     prep_table = f"prep_{distributor.lower()}"
 
     try:
-        client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
+        client.execute(f"DELETE FROM {prep_table} WHERE Month = {month} AND Year = {year}")
         st.info(f"Old rows deleted from {prep_table}")
     except Exception as e:
         st.error(f"Failed to delete old rows from prep table: {e}")
         return False
 
+    # Inline month/year in SQL if needed
+    sql = sql.replace("{month}", str(month)).replace("{year}", str(year))
+
     try:
-        client.execute(sql, [month, year])
+        client.execute(sql)
         st.success(f"Prep query executed for {prep_table}")
         return True
     except Exception as e:
