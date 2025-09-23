@@ -13,7 +13,7 @@ db_token = st.secrets["TURSO_AUTH_TOKEN"]
 client = create_client_sync(url=db_url, auth_token=db_token)
 
 
-# --- Helper to escape values ---
+# --- Helper to escape values for SQL ---
 def escape_value(v):
     if v is None:
         return "NULL"
@@ -38,7 +38,7 @@ def export_to_native(table, df, month, year):
         values = [escape_value(row[c]) for c in cols]
         sql = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
         try:
-            client.execute(sql)
+            client.execute(sql)  # DO NOT pass parameter list!
         except Exception as e:
             st.error(f"Failed to insert row {i+1}: {e}")
             return False
@@ -67,7 +67,7 @@ def run_prep(distributor, month, year):
         st.error(f"Failed to delete old rows from prep table: {e}")
         return False
 
-    # Inline month/year in SQL if needed
+    # Inline month/year if prep SQL uses {month}/{year} placeholders
     sql = sql.replace("{month}", str(month)).replace("{year}", str(year))
 
     try:
