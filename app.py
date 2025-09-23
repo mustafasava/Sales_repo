@@ -5,7 +5,7 @@ from libsql_client import create_client_sync
 
 # --- Import your cleaning functions ---
 from modules.cleaning.IBS_cln import ibs_cln
-# (later: from modules.cleaning.EPDA_cln import epda_cln, etc.)
+# from modules.cleaning.EPDA_cln import epda_cln, etc.
 
 # --- Turso connection ---
 db_url = st.secrets["TURSO_URL"]
@@ -16,14 +16,26 @@ client = create_client_sync(url=db_url, auth_token=db_token)
 # --- Export to native table ---
 def export_to_native(table, df, month, year):
     """Insert cleaned data into native_<distributor> table"""
-    client.execute(f"DELETE FROM {table} WHERE Month = ? AND Year = ?", [month, year])
+    try:
+        client.execute(f"DELETE FROM {table} WHERE Month = ? AND Year = ?", [month, year])
+        st.info(f"Old rows deleted from {table}")
+    except Exception as e:
+        st.error(f"Failed to delete old rows: {e}")
+        return False
 
     rows = df.to_dict(orient="records")
-    for row in rows:
+    for i, row in enumerate(rows):
         cols = list(row.keys())
         placeholders = ",".join("?" * len(cols))
         sql = f'INSERT INTO {table} ({",".join(cols)}) VALUES ({placeholders})'
-        client.execute(sql, list(row.values()))
+        try:
+            client.execute(sql, list(row.values()))
+        except Exception as e:
+            st.error(f"Failed to insert row {i+1}: {e}")
+            return False
+
+    st.success(f"Exported {len(rows)} rows to {table}")
+    return True
 
 
 # --- Run prep query ---
@@ -38,19 +50,23 @@ def run_prep(distributor, month, year):
         sql = f.read()
 
     prep_table = f"prep_{distributor.lower()}"
-    client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
 
-    res = client.execute(sql, [month, year])
-
-    # get number of rows inserted (if INSERT returns anything)
+    # Delete old rows first
     try:
-        inserted_rows = len(res.fetchall())
-        st.info(f"Inserted {inserted_rows} rows into {prep_table}")
-    except:
-        st.info(f"Prep query executed for {prep_table}")
+        client.execute(f"DELETE FROM {prep_table} WHERE Month = ? AND Year = ?", [month, year])
+        st.info(f"Old rows deleted from {prep_table}")
+    except Exception as e:
+        st.error(f"Failed to delete old rows from prep table: {e}")
+        return False
 
-    return True
-
+    # Run prep query
+    try:
+        client.execute(sql, [month, year])
+        st.success(f"Prep query executed for {prep_table}")
+        return True
+    except Exception as e:
+        st.error(f"Prep query failed: {e}")
+        return False
 
 
 # --- Streamlit UI ---
@@ -59,7 +75,7 @@ st.title("Data Cleaning & Prep Pipeline")
 uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx", "xls"])
 
 if uploaded_file:
-    # Keep original filename (so IBS_cln can parse YYYY-MM)
+    # Save temporary file
     temp_path = uploaded_file.name
     with open(temp_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
@@ -74,38 +90,28 @@ if uploaded_file:
     if distributor == "IBS":
         result = ibs_cln(temp_path)
     else:
-        st.error("Cleaning function not implemented yet for this distributor.")
+        st.error(f"Cleaning function not implemented yet for {distributor}")
         result = None
 
     if result:
         if len(result) == 4:
-            x, y, month, year = result
+            df_cleaned, y, month, year = result
         else:
-            x, y = result
+            df_cleaned, y = result
             month, year = None, None
 
         if y == 1:
             st.success(f"Cleaned {distributor} data for {month}-{year}")
-            st.dataframe(x.head(20))
+            st.dataframe(df_cleaned.head(20))
 
-            try:
-                # Export to native
-                export_to_native(f"native_{distributor.lower()}", x, month, year)
-                st.success(f"Exported to native_{distributor.lower()}")
-
-                # Run prep
-                if run_prep(distributor, month, year):
-                    st.success(f"Prep done into prep_{distributor.lower()}")
-                else:
-                    st.error("Prep failed.")
-
-            except Exception as e:
-                st.error(f"Error during export/prep: {e}")
+            # Export and prep
+            if export_to_native(f"native_{distributor.lower()}", df_cleaned, month, year):
+                run_prep(distributor, month, year)
 
         else:
-            st.error(x)
+            st.error(df_cleaned)
 
-    # Clean up
+    # Clean up temp file
     try:
         os.remove(temp_path)
     except:
