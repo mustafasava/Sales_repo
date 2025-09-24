@@ -1,3 +1,6 @@
 from upload import upload
 
-upload()
+
+def admin():
+
+    upload()

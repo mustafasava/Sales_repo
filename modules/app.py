@@ -3,7 +3,7 @@ from auth import login, logout
 from cln_ibs import cln_ibs
 from prep_ibs import prep_ibs
 import re
-import admin
+from admin import admin
 # ------------------- LOGIN -------------------
 if not login():
     st.stop()
@@ -13,5 +13,5 @@ if st.sidebar.button("Logout"):
     logout()
 
 if st.session_state.role == "admin":
-    admin.upload()
+    admin()
 
