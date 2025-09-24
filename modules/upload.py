@@ -14,6 +14,7 @@ def upload(uploaded_file):
             distname , year , month , ext = match.groups()
             try:
                 df = pd.read_excel(uploaded_file)
+                st.success(f"File is read successfully !")
                 return df,distname , year , month
             except Exception as e:
                 st.error(f"❌ Error reading Excel file: {e}")
