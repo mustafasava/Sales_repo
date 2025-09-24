@@ -12,6 +12,7 @@ def admin():
         
         cleaned = dist_list[uploaded[1]](uploaded[0], uploaded[1], uploaded[2], uploaded[3])
         
+        
 
     
 

@@ -17,23 +17,18 @@ def cln_ibs(uploaded_file , distname , year , month):
             missing = [col for col in expected if col not in actual]
             extra = [col for col in actual if col not in expected]
             order_issue = (set(expected) == set(actual)) and (expected != actual)
-
-            msg = "ERROR: Columns do not match exactly.\n"
             if missing:
                 st.error(f"Missing columns: {missing} ")
-                
             if extra:
                 st.error(f"Unexpected columns: {extra}")
-                
             if order_issue:
                 st.error(f"Order mismatch. : Expected order: {expected}")
                 st.error(f"Order mismatch. : Found order: {actual}")
             
-
         else:    
             cleaned_file = df.dropna(subset=['Supp. Code', 'Supp. Name', 'Item Code', 'Item Name'], how="all")
             cleaned_file = cleaned_file.drop(columns=['Unnamed: 8'])
-            cleaned_file['Dist_Name'] = distname
+            cleaned_file['dist_name'] = distname
             cleaned_file['year'] = year
             cleaned_file['month'] = month
             cleaned_file.reset_index(drop=True, inplace=True)
@@ -44,6 +39,5 @@ def cln_ibs(uploaded_file , distname , year , month):
                 st.success("✅ IBS file cleaned successfully.")
                 return cleaned_file , distname , year , month
             
-
     except Exception as e:
         st.error(f"❌ IBS ERROR: Unexpected error: {str(e)}")

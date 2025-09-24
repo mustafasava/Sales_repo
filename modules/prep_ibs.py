@@ -1,23 +1,33 @@
-from sqlalchemy import create_engine, text
+import numpy as np
+import pandas as pd
+import streamlit as st
 
-def prep_ibs(x,y,month=None,year=None):
-    if y == 1:
-        try:
-            engine = create_engine("sqlite:///.\\DBs\\dist_native\\ibs_db\\ibs.db")
+def prep_ibs(cleaned_file , distname , year , month):
+    try:
+        prepared_file = cleaned_file.rename(columns={
+            "Item Code": "item_code",
+            "Item Name": "item_name",
+            "Governorate Name": "governorate_name",
+            "Territory Name": "territory_name",
+            "Brick Name": "brick_name",
+            "QTY": "sales_units",
+            "FU": "bonus_units"
+        })
 
-            with open(".\\DBs\\dist_native\\queries\\ibs_prep.sql", "r", encoding="utf-8") as f:
-                sql_query = f.read()
+        prepared_file["territory_name"] = np.where(prepared_file["territory_name"] == "Template District                       ",prepared_file["brick_name"],
+                                        np.where(prepared_file["territory_name"] == "QENA I /RED SEA RED SEA                 ", prepared_file["governorate_name"],
+                                        np.where((prepared_file["territory_name"] == "NASR CITY NASR CITY                     ") 
+                                                &(
+                                                    (prepared_file["governorate_name"] == "القاهره الجديده     ") |
+                                                    (prepared_file["governorate_name"].str.contains("عاصم", na=False))
+                                                    ),"القاهره الجديده     ",prepared_file["territory_name"])))
+        
+        prepared_file = prepared_file[[
+            "item_code", "item_name", "brick_name", "governorate_name",
+            "territory_name", "sales_units", "bonus_units", "dist_name","year","month"]]
+        st.success(f"✅ IBS file prepared successfuly !")
+        return prepared_file , distname , year , month
 
-            with engine.begin() as conn:
-                conn.execute(text("DELETE FROM prep_ibs Where Month = :month AND Year = :year"),{"month": month, "year": year})
-                conn.execute(text("PRAGMA incremental_vacuum;"))
-                conn.execute(text(sql_query),{"month": month, "year": year})
-                conn.execute(text("PRAGMA incremental_vacuum;"))
-                x = f" {x} Data Prepared Successfully."
-                return x,y
-        except Exception as e:
-            x = f"\n Error happened while preparing :\n Details : {e}"
-            y=0
-            return x,y
-    else:
-        return x,y
+        
+    except Exception as e:
+        st.error(f"Error : {e}")
