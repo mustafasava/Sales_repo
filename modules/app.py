@@ -1,49 +1,37 @@
-from cln_egydrug import *
-from cln_epda import *
-from cln_ibs import cln_ibs
-from cln_pos import *
-from cln_sofico import *
-
-from prep_egydrug import *
-from prep_epda import *
-from prep_ibs import *
-from prep_pos import *
-from prep_sofico import *
-
 import streamlit as st
 import pandas as pd
-import sys
-import os
 
-import streamlit as st
-import os
-
+from cln_ibs import cln_ibs
+from prep_ibs import prep_ibs
 
 st.title("IBS Cleaning App")
 
 uploaded_file = st.file_uploader("Upload IBS Excel file", type=["xlsx"])
 
 if uploaded_file is not None:
-    # Use the original uploaded file name
-    original_name = uploaded_file.name
-    save_path = os.path.join(".", original_name)
-
-    # Save uploaded file locally
-    with open(save_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-
-    st.write(f"✅ File saved as: {save_path}")
-
     try:
-        # Run cleaning function
-        cleaned_path = cln_ibs(save_path)
+        # Read directly from uploaded file (BytesIO)
+        df = pd.read_excel(uploaded_file)
 
-        st.success(f"Cleaning successful! Cleaned file saved at: {cleaned_path}")
+        st.write("📊 Raw Data Preview:")
+        st.dataframe(df.head())
+
+        # Run cleaning function (now accepts dataframe)
+        cleaned_df = cln_ibs(df)
+
+        st.success("✅ Cleaning successful!")
+
+        # Show preview
+        st.write("🧹 Cleaned Data Preview:")
+        st.dataframe(cleaned_df.head())
+
+        # Allow download of cleaned file
+        cleaned_excel = cleaned_df.to_excel(index=False, engine="xlsxwriter")
         st.download_button(
             label="Download Cleaned File",
-            data=open(cleaned_path, "rb"),
-            file_name=os.path.basename(cleaned_path),
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            data=cleaned_df.to_csv(index=False).encode("utf-8"),  # or to_excel via BytesIO
+            file_name="cleaned_ibs.csv",
+            mime="text/csv"
         )
 
     except Exception as e:
