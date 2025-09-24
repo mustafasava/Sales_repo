@@ -12,5 +12,5 @@ def upload():
     
 def validate(filename):
     pattern = r"^([a-zA-Z]+)_(\d{4})_(0?[1-9]|1[0-2])\.(xlsx|xls)$"
-    re.match(pattern,filename)
-    
+    if re.match(pattern,filename) == None:
+        st.error(f"no matching")
