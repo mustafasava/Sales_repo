@@ -7,13 +7,28 @@ def cln_ibs(uploaded_file , distname , year , month):
     try:
         df = pd.read_excel(BytesIO(uploaded_file.getbuffer()), skiprows=1)
 
-        required_cols = [
-            'Date', 'Supp. Code', 'Supp. Name', 'Item Code', 'Item Name', 'Brick',
-            'Governorate Name', 'Territory Name', 'Unnamed: 8',
-            'Brick Name', 'QTY', 'FU', 'Total Qty']
-        
-        if list(df.columns) != required_cols:
-            st.error(f"❌ IBS ERROR: Columns mismatch.\nExpected: {required_cols}\nFound: {list(df.columns)}")
+        required_cols = ['Date', 'Supp. Code', 'Supp. Name', 'Item Code', 'Item Name', 'Brick',
+       'Governorate Name', 'Territory Name', 'Unnamed: 8','Brick Name', 'QTY', 'FU','Total Qty']
+        expected = required_cols
+        actual = list(df.columns)
+
+        if expected != actual:
+            
+            missing = [col for col in expected if col not in actual]
+            extra = [col for col in actual if col not in expected]
+            order_issue = (set(expected) == set(actual)) and (expected != actual)
+
+            msg = "ERROR: Columns do not match exactly.\n"
+            if missing:
+                msg += f"Missing columns: {missing} /////"
+                
+            if extra:
+                msg += f"Unexpected columns: {extra} /////"
+                
+            if order_issue:
+                msg += f"Order mismatch. : Expected order: {expected} ////// Found order: {actual}"
+
+            st.error(msg)
 
         else:    
             cleaned_file = df.dropna(subset=['Supp. Code', 'Supp. Name', 'Item Code', 'Item Name'], how="all")
