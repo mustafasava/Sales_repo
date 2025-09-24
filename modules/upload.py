@@ -27,7 +27,7 @@ def upload(uploaded_file):
                     st.error(f"❌ Error reading Excel file: {e}")
                     
             else:
-                st.error(f"❌ The distributor you provided is not in distributors list : {dist_list.keys}")
+                st.error(f"❌ The distributor you provided is not in distributors list : {dist_list.keys()}")
                 
         
         else:
