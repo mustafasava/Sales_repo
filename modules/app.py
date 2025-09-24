@@ -1,52 +1,37 @@
 import streamlit as st
-from auth import init_auth, login, logout
+import re
+from modules.cln_ibs import cln_ibs
 
-# Import cleaning + prep functions
-from cln_ibs import cln_ibs
-from prep_ibs import prep_ibs
-# ... import others when needed
+# --- filename validation ---
+def validate_filename(filename: str, distname: str) -> bool:
+    """
+    Validate filename format: distname_YYYY_MM.xlsx
+    """
+    pattern = rf"^{distname}_(\d{{4}})_(\d{{2}})\.xlsx$"
+    return bool(re.match(pattern, filename))
 
-# --- Initialize auth ---
-init_auth()
 
-st.title("🔐 Distributor Cleaning & Preparing Portal")
+st.title("📊 Sales Data Processing App")
 
-if not st.session_state.logged_in:
-    with st.form("login_form"):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submitted = st.form_submit_button("Login")
+# Select distributor
+distributors = ["ibs", "pos", "sofico", "epda"]  # extend later
+dist_choice = st.selectbox("Select Distributor", distributors)
 
-    if submitted:
-        if login(username, password):
-            st.success(f"Welcome {st.session_state.username} ({st.session_state.role}, {st.session_state.area})")
-            st.rerun()
-        else:
-            st.error("❌ Invalid username or password")
+# Upload file
+uploaded_file = st.file_uploader("Upload file", type=["xlsx"])
 
-else:
-    st.sidebar.success(f"✅ Logged in as {st.session_state.username}")
-    if st.sidebar.button("Logout"):
-        logout()
-        st.rerun()
+if uploaded_file is not None:
+    if validate_filename(uploaded_file.name, dist_choice):
+        st.success("✅ Valid filename detected")
+        
+        if dist_choice == "ibs":
+            message, status = cln_ibs(uploaded_file)  # returns (msg, status)
+            if status == 1:
+                st.success(message)
+            else:
+                st.error(message)
 
-    # --- Role-based content ---
-    if st.session_state.role == "admin":
-        st.header("👑 Admin Dashboard")
-        # Example IBS section
-        st.subheader("IBS Cleaning")
-        uploaded_file = st.file_uploader("Upload IBS Excel file", type=["xlsx"])
-        if uploaded_file is not None:
-            msg = cln_ibs(uploaded_file)   # cleaning returns message
-            st.write(msg)
-
-        st.subheader("IBS Preparing")
-        repo_path = st.text_input("Enter IBS repo file path")
-        if st.button("Run IBS Prep"):
-            msg = prep_ibs(repo_path)      # preparing returns message
-            st.write(msg)
-
-    elif st.session_state.role == "sales":
-        st.header(f"📊 Sales Dashboard – {st.session_state.area}")
-        st.write("Restricted view for sales users.")
-        # Here you can show limited distributors
+        # TODO: add other distributors (pos, sofico, epda)
+    
+    else:
+        st.error(f"❌ Invalid filename. Expected: {dist_choice}_YYYY_MM.xlsx")
