@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import re
 
 def upload(uploaded_file):
@@ -11,7 +12,12 @@ def upload(uploaded_file):
         if  match != None:
             st.success(f"Validation Done !, File is accepted.")
             distname , year , month , ext = match.groups()
-            return distname , year , month
+            try:
+                df = pd.read_excel(uploaded_file)
+            except Exception as e:
+                st.error(f"❌ Error reading Excel file: {e}")
+                return None, None, None, None
+            return df,distname , year , month
         
         else:
             st.markdown(
@@ -24,9 +30,3 @@ def upload(uploaded_file):
                         """,
                         unsafe_allow_html=True
                     )
-
-
-
-        
-            
-            
