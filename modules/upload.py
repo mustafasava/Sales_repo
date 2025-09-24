@@ -6,17 +6,8 @@ def upload():
 
     if uploaded_file is not None:
         st.success(f"File uploaded: {uploaded_file.name}")
-        return uploaded_file.name
-    else:
-        return "no file uploaded yet"
-    
-def validate(filename):
-    if filename == None:
-        ""
-    else:
-
         pattern = r"^([a-zA-Z]+)_(\d{4})_(0?[1-9]|1[0-2])\.(xlsx|xls)$"
-        if re.match(pattern,filename) == None:
+        if re.match(pattern,uploaded_file.name) == None:
             st.error(f"The naming pattern is wrong please name like : distname_year_month ,\
                     example: ibs_2025_7")
         else:
