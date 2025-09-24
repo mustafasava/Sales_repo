@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, text
 
-def ibs_prep(x,y,month=None,year=None):
+def prep_ibs(x,y,month=None,year=None):
     if y == 1:
         try:
             engine = create_engine("sqlite:///.\\DBs\\dist_native\\ibs_db\\ibs.db")
