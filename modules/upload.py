@@ -15,7 +15,7 @@ def upload(uploaded_file):
             try:
                 df = pd.read_excel(uploaded_file)
                 st.success(f"File is read successfully !")
-                return df,distname , year , month
+                return df , distname , year , month
             except Exception as e:
                 st.error(f"❌ Error reading Excel file: {e}")
                 return None, None, None, None
@@ -23,5 +23,5 @@ def upload(uploaded_file):
         
         else:
 
-            st.error(f"❌ The naming pattern is wrong. Please name like: distname_year_month , 💡  Example   : ibs_2025_7   ")
+             return st.error(f"❌ The naming pattern is wrong. Please name like: distname_year_month , 💡  Example   : ibs_2025_7   ")
             
