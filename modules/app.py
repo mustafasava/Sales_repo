@@ -1,37 +1,42 @@
 import streamlit as st
-import re
+from auth import login, logout
 from cln_ibs import cln_ibs
+from prep_ibs import prep_ibs
 
-# --- filename validation ---
-def validate_filename(filename: str, distname: str) -> bool:
-    """
-    Validate filename format: distname_YYYY_MM.xlsx
-    """
-    pattern = rf"^{distname}_(\d{{4}})_(\d{{2}})\.xlsx$"
-    return bool(re.match(pattern, filename))
+# ------------------- LOGIN -------------------
+if not login():
+    st.stop()
 
+st.sidebar.success(f"Welcome {st.session_state.username} ({st.session_state.role})")
+if st.sidebar.button("Logout"):
+    logout()
 
-st.title("📊 Sales Data Processing App")
+# ------------------- ROLE ROUTING -------------------
+if st.session_state.role == "admin":
+    st.header("📊 Admin Dashboard")
+    st.write("Here admin can manage cleaning & preparing for all distributors")
 
-# Select distributor
-distributors = ["ibs", "pos", "sofico", "epda"]  # extend later
-dist_choice = st.selectbox("Select Distributor", distributors)
+    uploaded_file = st.file_uploader("Upload IBS Excel file", type=["xlsx"])
+    if uploaded_file:
+        msg, status, df, month, year = cln_ibs(uploaded_file)
+        st.write(msg)
+        if status:
+            st.dataframe(df.head())
 
-# Upload file
-uploaded_file = st.file_uploader("Upload file", type=["xlsx"])
+        if st.button("Run Preparing"):
+            msg = prep_ibs("cleaned_src/" + uploaded_file.name.lower().replace(" ", "_"))
+            st.write(msg)
 
-if uploaded_file is not None:
-    if validate_filename(uploaded_file.name, dist_choice):
-        st.success("✅ Valid filename detected")
-        
-        if dist_choice == "ibs":
-            message, status = cln_ibs(uploaded_file)  # returns (msg, status)
-            if status == 1:
-                st.success(message)
-            else:
-                st.error(message)
+elif st.session_state.role == "sales":
+    st.header(f"🧾 Sales Dashboard - {st.session_state.area}")
+    st.write("Sales users see only limited reports or uploads here.")
 
-        # TODO: add other distributors (pos, sofico, epda)
-    
-    else:
-        st.error(f"❌ Invalid filename. Expected: {dist_choice}_YYYY_MM.xlsx")
+    uploaded_file = st.file_uploader("Upload IBS Excel file", type=["xlsx"])
+    if uploaded_file:
+        msg, status, df, month, year = cln_ibs(uploaded_file)
+        st.write(msg)
+        if status:
+            st.dataframe(df.head())
+
+else:
+    st.error("Unknown role — check auth setup.")
