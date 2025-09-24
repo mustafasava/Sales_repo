@@ -13,5 +13,5 @@ if st.sidebar.button("Logout"):
     logout()
 
 if st.session_state.role == "admin":
-    admin()
+    admin.upload()
 
