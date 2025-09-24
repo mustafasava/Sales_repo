@@ -10,7 +10,7 @@ GITHUB_REPO = "mustafasava/Sales_repo"
 g = Github(GITHUB_TOKEN)
 repo = g.get_repo(GITHUB_REPO)
 
-def save_to_github(df, distname, year, month, sheettype):
+def save(df, distname, year, month, sheettype):
     folder = "cleaned_src" if sheettype == "cln" else "prepared_src"
     file_name = f"{sheettype}_{distname}_{year}_{month}.xlsx"
     save_path = f"{folder}/{file_name}"

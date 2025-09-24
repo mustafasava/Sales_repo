@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, text
 
-def epda_prep(x,y,month=None,year=None):
+def prep_epda(x,y,month=None,year=None):
     if y == 1:
         try:
             engine = create_engine("sqlite:///.\\DBs\\dist_native\\epda_db\\epda.db")
