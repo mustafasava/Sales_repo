@@ -13,7 +13,7 @@ def upload(uploaded_file):
                         <div style="background-color:#f8d7da; color:#721c24; padding:10px; border-radius:5px; border:1px solid #f5c6cb;">
                             ❌ The naming pattern is wrong.<br>
                             Please name like: distname_year_month<br>
-                            <h1>Example</h1>: ibs_2025_7
+                            <h6>Example</h6>: ibs_2025_7
                         </div>
                         """,
                         unsafe_allow_html=True
