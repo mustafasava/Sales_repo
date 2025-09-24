@@ -54,7 +54,7 @@ else:
     st.sidebar.success(f"✅ Logged in as {st.session_state.username}")
     if st.sidebar.button("Logout"):
         logout()
-        st.experimental_rerun()
+        st.rerun()
 
     # --- Role-based app content ---
     if st.session_state.role == "admin":
