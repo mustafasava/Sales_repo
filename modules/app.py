@@ -46,7 +46,7 @@ if not st.session_state.logged_in:
     if submitted:
         if login(username, password):
             st.success(f"Welcome {st.session_state.username} ({st.session_state.role}, {st.session_state.area})")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("❌ Invalid username or password")
 
