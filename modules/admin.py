@@ -16,7 +16,7 @@ def admin():
         if cleaned is not None:
             
             prepared = dist_list[cleaned[1]][1](cleaned[0], cleaned[1], cleaned[2], cleaned[3])
-            save(prepared[0], prepared[1], prepared[2], prepared[3],"cln")
+            save(prepared[0], prepared[1], prepared[2], prepared[3],"prep")
 
     
 
