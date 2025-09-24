@@ -1,8 +1,5 @@
 import streamlit as st
 from auth import login, logout
-from cln_ibs import cln_ibs
-from prep_ibs import prep_ibs
-import re
 from admin import admin
 # ------------------- LOGIN -------------------
 if not login():

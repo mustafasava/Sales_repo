@@ -7,29 +7,29 @@ x = None #--- A global variable holder for messages or returned DataFrame --
 y = None #--- A global variable holder for identifying the returned x is a df or text --
 
 
-def sofico_cln(sheet_path: str):
+def cln_sofico(uploaded_file , distname , year , month):
     global x
     try:
 # --- Extract Year & Month ---
         try:
-            date = (sheet_path.split(" ")[-1]).split(".")[0]
+            date = (uploaded_file.split(" ")[-1]).split(".")[0]
             year, month = date.split("-")
             year, month = int(year), int(month)
         except Exception  :
-            x = f"sofico_cln ERROR: Filename must contain date in 'YYYY-MM' format: {sheet_path}"
+            x = f"sofico_cln ERROR: Filename must contain date in 'YYYY-MM' format: {uploaded_file}"
             
             y = 0
             return x ,y
 # --- Read Excel ---
         try:
-            df = pd.read_excel(io=sheet_path)
+            df = pd.read_excel(io=uploaded_file)
         except FileNotFoundError:
-            x = f"sofico_cln ERROR: File not found: {sheet_path}"
+            x = f"sofico_cln ERROR: File not found: {uploaded_file}"
             
             y = 0
             return x ,y
         except Exception as e:
-            x = f"sofico_cln ERROR: Error reading Excel file {sheet_path}: {e}"
+            x = f"sofico_cln ERROR: Error reading Excel file {uploaded_file}: {e}"
             
             y = 0
             return x ,y
@@ -77,7 +77,7 @@ def sofico_cln(sheet_path: str):
 
 # --- returning dataframe if it is not empty ---
         if df.empty:
-            x = f"sofico_cln ERROR: No valid data after cleaning-Empty table.  {sheet_path}"
+            x = f"sofico_cln ERROR: No valid data after cleaning-Empty table.  {uploaded_file}"
 
             y = 0
             return x ,y

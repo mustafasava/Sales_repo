@@ -6,35 +6,27 @@ import os
 x = None #--- A global variable holder for messages or returned DataFrame --
 y = None #--- A global variable holder for identifying the returned x is a df or text --
 
-def egydrug_cln(sheet_path: str):
+def cln_egydrug(uploaded_file , distname , year , month):
     global x
     global y
     try:
-# --- Extract Year & Month ---
-        try:
-            date = (sheet_path.split(" ")[-1]).split(".")[0]
-            year, month = date.split("-")
-            year, month = int(year), int(month)
-        except Exception  :
-            x = f"egydrug_cln ERROR: Filename must contain date in 'YYYY-MM' format: {sheet_path}"
-            y = 0
-            return x ,y
+
 # --- Read Excel ---
         try:
-            df_branches = pd.read_excel(io=sheet_path,sheet_name="Branches Sales")
-            df_pharmacies = pd.read_excel(io=sheet_path,sheet_name="Pharmacy Sales")
-            df_return = pd.read_excel(io=sheet_path,sheet_name="Branch Sales Return")
-            df_transfer = pd.read_excel(io=sheet_path,sheet_name="Transfer")
-            df_trnsreturn = pd.read_excel(io=sheet_path,sheet_name="Transfer Return ")
-            df_stocks = pd.read_excel(io=sheet_path,sheet_name="Monthly Stocks")
+            df_branches = pd.read_excel(io=uploaded_file,sheet_name="Branches Sales")
+            df_pharmacies = pd.read_excel(io=uploaded_file,sheet_name="Pharmacy Sales")
+            df_return = pd.read_excel(io=uploaded_file,sheet_name="Branch Sales Return")
+            df_transfer = pd.read_excel(io=uploaded_file,sheet_name="Transfer")
+            df_trnsreturn = pd.read_excel(io=uploaded_file,sheet_name="Transfer Return ")
+            df_stocks = pd.read_excel(io=uploaded_file,sheet_name="Monthly Stocks")
 
         except FileNotFoundError as e:
-            x = f"egydrug_cln ERROR: File not found: {sheet_path} : {e}"
+            x = f"egydrug_cln ERROR: File not found: {uploaded_file} : {e}"
             
             y = 0
             return x ,y
         except Exception as e:
-            x = f"egydrug_cln ERROR: Error reading Excel file {sheet_path}: {e}"
+            x = f"egydrug_cln ERROR: Error reading Excel file {uploaded_file}: {e}"
             
             y = 0
             return x ,y
@@ -132,7 +124,7 @@ def egydrug_cln(sheet_path: str):
                 "native_egydrug_stock": df_stocks}
        
         if all(df.empty for df in dfs.values()) or sales_df.empty:
-            x = f"EgyDrug_cln ERROR: No valid data after cleaning-Empty table.  {sheet_path}"
+            x = f"EgyDrug_cln ERROR: No valid data after cleaning-Empty table.  {uploaded_file}"
             y = 0
             return x ,y
                 

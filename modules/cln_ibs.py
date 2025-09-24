@@ -1,7 +1,7 @@
 import pandas as pd
 from io import BytesIO
 
-def cln_ibs(uploaded_file):
+def cln_ibs(uploaded_file , distname , year , month):
     """
     Cleans IBS Excel file from Streamlit uploader.
 
@@ -34,6 +34,7 @@ def cln_ibs(uploaded_file):
         # --- Cleaning steps ---
         df = df.dropna(subset=['Supp. Code', 'Supp. Name', 'Item Code', 'Item Name'], how="all")
         df = df.drop(columns=['Unnamed: 8'])
+        df['Dist_Name'] = distname
         df.reset_index(drop=True, inplace=True)
 
         if df.empty:
