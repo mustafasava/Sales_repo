@@ -26,8 +26,8 @@ def cln_ibs(uploaded_file , distname , year , month):
                 st.error(f"Unexpected columns: {extra}")
                 
             if order_issue:
-                st.error(f"Order mismatch. : Expected order: {expected} ////// Found order: {actual}")
-
+                st.error(f"Order mismatch. : Expected order: {expected}")
+                st.error(f"Order mismatch. : Found order: {actual}")
             
 
         else:    
