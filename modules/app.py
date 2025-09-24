@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 from cln_ibs import cln_ibs
-from prep_ibs import prep_ibs
+
 
 st.title("IBS Cleaning App")
 
