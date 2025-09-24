@@ -1,15 +1,14 @@
-# modules/cln_ibs.py
-
 import pandas as pd
 from io import BytesIO
 
-def cln_ibs(file_binary):
+def cln_ibs(uploaded_file):
     """
     Cleans IBS Excel file from Streamlit uploader.
 
     Parameters
     ----------
-    file_binary : UploadedFile (binary content)
+    uploaded_file : UploadedFile
+        Streamlit uploaded file.
 
     Returns
     -------
@@ -17,8 +16,8 @@ def cln_ibs(file_binary):
         (message:str, status:int, df:DataFrame, month:int|None, year:int|None)
     """
     try:
-        # --- Load Excel ---
-        df = pd.read_excel(BytesIO(file_binary), skiprows=1)
+        # --- Load Excel from uploaded file ---
+        df = pd.read_excel(BytesIO(uploaded_file.getbuffer()), skiprows=1)
 
         # --- Validate required columns ---
         required_cols = [
@@ -40,8 +39,8 @@ def cln_ibs(file_binary):
         if df.empty:
             return "❌ IBS ERROR: No valid data after cleaning (empty table).", 0, None, None, None
 
-        # --- Optional: Add placeholders for month/year ---
-        month, year = None, None  # extracted from filename in app.py
+        # --- Placeholders for month/year (from filename in app.py) ---
+        month, year = None, None
 
         return "✅ IBS file cleaned successfully.", 1, df, month, year
 
