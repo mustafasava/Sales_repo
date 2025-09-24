@@ -10,7 +10,7 @@ def admin():
 
     if uploaded is not None:
         
-        cleaned = dist_list([uploaded[1]](uploaded[0], uploaded[1], uploaded[2], uploaded[3]))
+        dist_list([uploaded[1]](uploaded[0], uploaded[1], uploaded[2], uploaded[3]))
         
 
     
