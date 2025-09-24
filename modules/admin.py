@@ -1,4 +1,4 @@
-from upload import upload,validate
+from upload import upload
 
 
 def admin():
