@@ -1,6 +1,6 @@
 import streamlit as st
 import re
-from modules.cln_ibs import cln_ibs
+from cln_ibs import cln_ibs
 
 # --- filename validation ---
 def validate_filename(filename: str, distname: str) -> bool:
