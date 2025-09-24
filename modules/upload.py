@@ -14,10 +14,11 @@ def upload(uploaded_file):
             distname , year , month , ext = match.groups()
             try:
                 df = pd.read_excel(uploaded_file)
+                return df,distname , year , month
             except Exception as e:
                 st.error(f"❌ Error reading Excel file: {e}")
                 return None, None, None, None
-            return df,distname , year , month
+            
         
         else:
             st.markdown(
