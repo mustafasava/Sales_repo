@@ -15,3 +15,5 @@ def validate(filename):
     if re.match(pattern,filename) == None:
         st.error(f"The naming pattern is wrong please name like : distname_year_month ,\
                   example: ibs_2025_7")
+    else:
+        st.success(f"Validation Done!, File is accepted.")
