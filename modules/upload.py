@@ -11,9 +11,13 @@ def upload():
         return "no file uploaded yet"
     
 def validate(filename):
-    pattern = r"^([a-zA-Z]+)_(\d{4})_(0?[1-9]|1[0-2])\.(xlsx|xls)$"
-    if re.match(pattern,filename) == None:
-        st.error(f"The naming pattern is wrong please name like : distname_year_month ,\
-                  example: ibs_2025_7")
+    if filename == None:
+        ""
     else:
-        st.success(f"Validation Done!, File is accepted.")
+
+        pattern = r"^([a-zA-Z]+)_(\d{4})_(0?[1-9]|1[0-2])\.(xlsx|xls)$"
+        if re.match(pattern,filename) == None:
+            st.error(f"The naming pattern is wrong please name like : distname_year_month ,\
+                    example: ibs_2025_7")
+        else:
+            st.success(f"Validation Done!, File is accepted.")
