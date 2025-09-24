@@ -1,41 +1,15 @@
 import streamlit as st
+from auth import init_auth, login, logout
 
-# --- Auth dictionary ---
-auth = {
-    "user1": ["admin", "1234", "all"],
-    "user2": ["sales", "1234", "ALEX"],
-    "user3": ["sales", "1234", "Cairo"]
-}
+# Import cleaning + prep functions
+from cln_ibs import cln_ibs
+from prep_ibs import prep_ibs
+# ... import others when needed
 
-# --- Initialize session state ---
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-    st.session_state.username = None
-    st.session_state.role = None
-    st.session_state.area = None
+# --- Initialize auth ---
+init_auth()
 
-
-def login(username, password):
-    if username in auth:
-        role, pw, area = auth[username]
-        if password == pw:
-            st.session_state.logged_in = True
-            st.session_state.username = username
-            st.session_state.role = role
-            st.session_state.area = area
-            return True
-    return False
-
-
-def logout():
-    st.session_state.logged_in = False
-    st.session_state.username = None
-    st.session_state.role = None
-    st.session_state.area = None
-
-
-# --- App Layout ---
-st.title("🔐 IBS Cleaning Portal")
+st.title("🔐 Distributor Cleaning & Preparing Portal")
 
 if not st.session_state.logged_in:
     with st.form("login_form"):
@@ -56,20 +30,23 @@ else:
         logout()
         st.rerun()
 
-    # --- Role-based app content ---
+    # --- Role-based content ---
     if st.session_state.role == "admin":
         st.header("👑 Admin Dashboard")
-        st.write("Here the admin can:")
-        st.markdown("- Upload and clean **any distributor** file")
-        st.markdown("- View consolidated reports across all areas")
-        st.markdown("- Manage users")
-        # 👉 place your admin cleaning app logic here
-        # e.g., distributor selector, advanced reports, etc.
+        # Example IBS section
+        st.subheader("IBS Cleaning")
+        uploaded_file = st.file_uploader("Upload IBS Excel file", type=["xlsx"])
+        if uploaded_file is not None:
+            msg = cln_ibs(uploaded_file)   # cleaning returns message
+            st.write(msg)
+
+        st.subheader("IBS Preparing")
+        repo_path = st.text_input("Enter IBS repo file path")
+        if st.button("Run IBS Prep"):
+            msg = prep_ibs(repo_path)      # preparing returns message
+            st.write(msg)
 
     elif st.session_state.role == "sales":
         st.header(f"📊 Sales Dashboard – {st.session_state.area}")
-        st.write("Here the sales user can:")
-        st.markdown(f"- Upload and clean files **only for {st.session_state.area}**")
-        st.markdown("- See their own sales KPIs")
-        # 👉 place your sales app logic here
-        # e.g., restrict uploads, filter reports by st.session_state.area
+        st.write("Restricted view for sales users.")
+        # Here you can show limited distributors
