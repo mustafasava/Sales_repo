@@ -1,6 +1,6 @@
-from upload import upload
+from upload import upload,validate
 
 
 def admin():
 
-    upload()
+    validate(upload())
