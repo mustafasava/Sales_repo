@@ -6,8 +6,12 @@ from info import dist_list
 
 def admin():
 
-    result = upload(st.file_uploader("Upload Excel file", type=["xlsx", "xls"]))
-    if result is not None:
+    uploaded = upload(st.file_uploader("Upload Excel file", type=["xlsx", "xls"]))
+
+    if uploaded is not None:
         
-        st.write(dist_list[result[1]](result[0], result[1], result[2], result[3]))
+        cleaned = dist_list([uploaded[1]](uploaded[0], uploaded[1], uploaded[2], uploaded[3]))
+        st.write(cleaned)
+
+    
 
