@@ -1,8 +1,8 @@
 import streamlit as st
 import re
 
-def upload():
-    uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx", "xls"])
+def upload(uploaded_file):
+    
 
     if uploaded_file is not None:
         st.success(f"File uploaded: {uploaded_file.name}")
