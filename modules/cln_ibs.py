@@ -20,15 +20,15 @@ def cln_ibs(uploaded_file , distname , year , month):
 
             msg = "ERROR: Columns do not match exactly.\n"
             if missing:
-                msg += f"Missing columns: {missing} /////"
+                st.error(f"Missing columns: {missing} ")
                 
             if extra:
-                msg += f"Unexpected columns: {extra} /////"
+                st.error(f"Unexpected columns: {extra}")
                 
             if order_issue:
-                msg += f"Order mismatch. : Expected order: {expected} ////// Found order: {actual}"
+                st.error(f"Order mismatch. : Expected order: {expected} ////// Found order: {actual}")
 
-            st.error(msg)
+            
 
         else:    
             cleaned_file = df.dropna(subset=['Supp. Code', 'Supp. Name', 'Item Code', 'Item Name'], how="all")
