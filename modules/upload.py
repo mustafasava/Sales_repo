@@ -24,7 +24,7 @@ def upload(uploaded_file):
                     st.error(f"❌ Error reading Excel file: {e}")
                     
             else:
-                st.error(f"❌ The distributor you provided is not in distributors list : {', '.join(dist_list.keys())}")
+                st.error(f"❌ The distributor you provided is not in distributors list :  {', '.join(dist_list.keys())}")
                 
         else:
             st.error(f"❌ The naming pattern is wrong. Please name like: distname_year_month , 💡  Example   : ibs_2025_7   ")

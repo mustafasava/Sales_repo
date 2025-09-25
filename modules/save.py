@@ -11,7 +11,7 @@ g = Github(GITHUB_TOKEN)
 repo = g.get_repo(GITHUB_REPO)
 
 def save(df, distname, year, month, sheettype):
-    if sheettype == "Cleaned":
+    if sheettype == "cleaned":
         folder = "cleaned_src"
     else :
         folder = "prepared_src"
