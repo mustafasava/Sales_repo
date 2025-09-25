@@ -19,7 +19,7 @@ def prep_pos(cleaned_file , distname , year , month):
         split_codes = ['280C6','406C6','407C6','M0009']
         mask = prepared_file["territory_code"].isin(split_codes)
 
-        df_half = cleaned_file.loc[mask].copy()
+        df_half = prepared_file.loc[mask].copy()
         df_half["sales_units"] = df_half["sales_units"] / 2
         df_half["bonus_units"] = df_half["bonus_units"] / 2
 
