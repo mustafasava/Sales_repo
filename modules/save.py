@@ -34,6 +34,7 @@ def save(df, distname, year, month, sheettype):
                 buffer.read(),
                 contents.sha
             )
+            st.info("while saving I found a sheet with same name, I updated it.")
         except Exception as e:
             st.error(f"{e}")
             
