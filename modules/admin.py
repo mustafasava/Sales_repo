@@ -17,6 +17,6 @@ def admin():
             
             prepared = dist_list[cleaned[1]][1](cleaned[0], cleaned[1], cleaned[2], cleaned[3])
             save(prepared[0], prepared[1], prepared[2], prepared[3],"Prepared")
-
+            st.success(f"{prepared[1]} sheet has been uploaded, cleaned, prepared and saved successfully !")
     
 
