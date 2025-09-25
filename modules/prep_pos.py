@@ -26,7 +26,7 @@ def prep_pos(cleaned_file , distname , year , month):
 
         df_new = df_half.copy()
         df_new["territory_code"] = "N9999999"
-        df_new["territory_name"] = "New Cairo"
+        df_new["territory_name"] = "القاهرة الجديدة"
 
 
         prepared_file = pd.concat([df_half, df_new, prepared_file.loc[~mask]], ignore_index=True)
