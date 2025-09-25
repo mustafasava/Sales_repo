@@ -36,7 +36,6 @@ def cln_ibs(uploaded_file , distname , year , month):
             if df.empty:
                 st.error("❌ IBS ERROR: No valid data after cleaning (empty table).")
             else:
-                st.success("✅ IBS file cleaned successfully.")
                 return cleaned_file , distname , year , month
             
     except Exception as e:

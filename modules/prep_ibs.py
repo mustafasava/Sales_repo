@@ -25,7 +25,6 @@ def prep_ibs(cleaned_file , distname , year , month):
         prepared_file = prepared_file[[
             "item_code", "item_name", "brick_name", "governorate_name",
             "territory_name", "sales_units", "bonus_units", "dist_name","year","month"]]
-        st.success(f"✅ IBS file prepared successfuly !")
         return prepared_file , distname , year , month
 
         

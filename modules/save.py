@@ -22,11 +22,28 @@ def save(df, distname, year, month, sheettype):
     df.to_excel(buffer, index=False)
     buffer.seek(0)
 
-    try:
-        contents = repo.get_contents(save_path)
-        repo.update_file(save_path, f"Update {file_name}", buffer.read(), contents.sha)
-        st.success(f"There is a sheet with same name : {sheettype} sheet Updated successfully !")
-    except:
-        buffer.seek(0)
-        repo.create_file(save_path, f"Add {file_name}", buffer.read())
-        st.success(f"This is a new sheet : {sheettype} sheet Added successfully !")
+    files = repo.get_contents(folder)  # list of files in the folder
+    existing_files = [f.path for f in files]
+
+    if save_path in existing_files:
+        try:
+            contents = repo.get_contents(save_path)
+            repo.update_file(
+                save_path,
+                f"Update {file_name}",
+                buffer.read(),
+                contents.sha
+            )
+        except Exception as e:
+            st.error(f"{e}")
+            
+    else:
+        try:
+            buffer.seek(0)
+            repo.create_file(
+                save_path,
+                f"Add {file_name}",
+                buffer.read()
+            )
+        except Exception as e:
+            st.error(f"{e}")
