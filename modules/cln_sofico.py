@@ -30,7 +30,7 @@ def cln_sofico(uploaded_file , distname , year , month):
                 st.error(f"Order mismatch. : Found order: {actual}")
             
         else:    
-            cleaned_file = cleaned_file.dropna(subset = ['ItemID', 'ItemName','PrimaryVendorID','OrderAccount'], how="all")
+            cleaned_file = df.dropna(subset = ['ItemID', 'ItemName','PrimaryVendorID','OrderAccount'], how="all")
             cleaned_file['dist_name'] = distname
             cleaned_file['year'] = year
             cleaned_file['month'] = month
