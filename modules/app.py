@@ -13,4 +13,4 @@ if st.session_state.role == "admin":
     try:
         admin()
     except Exception as e:
-        st.error(f"{e}")
+        pass
