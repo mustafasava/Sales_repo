@@ -29,7 +29,7 @@ def prep_pos(cleaned_file , distname , year , month):
         df_new["territory_name"] = "New Cairo"
 
 
-        prepared_file = pd.concat([df_half, df_new, cleaned_file.loc[~mask]], ignore_index=True)
+        prepared_file = pd.concat([df_half, df_new, prepared_file.loc[~mask]], ignore_index=True)
 
         prepared_file = prepared_file[[
             "item_code", "item_name", "territory_code", "territory_name","sales_units", "bonus_units", "dist_name","year","month"]]
