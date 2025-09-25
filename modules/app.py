@@ -12,5 +12,5 @@ if st.sidebar.button("Logout"):
 if st.session_state.role == "admin":
     try:
         admin()
-    except:
-        pass
+    except Exception as e:
+        st.error(f"{e}")
