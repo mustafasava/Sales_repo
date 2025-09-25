@@ -5,7 +5,7 @@ import streamlit as st
 def cln_epda(uploaded_file , distname , year , month):
     
     try:
-        df = pd.read_excel(BytesIO(uploaded_file.getbuffer()), engine="xlrd")
+        df = pd.read_excel(BytesIO(uploaded_file.getbuffer()), engine="xlrd",skiprows=10)
 
         required_cols = ['Unnamed: 0', 'Unnamed: 1', 'Unnamed: 2', 'النسبة', 'Unnamed: 4',       
                         'الكمية المباعة', 'Unnamed: 6', 'Unnamed: 7', 'Unnamed: 8',
