@@ -1,39 +1,12 @@
 import pandas as pd
-import numpy as np
-
-
-
-x = None #--- A global variable holder for messages or returned DataFrame --
-y = None #--- A global variable holder for identifying the returned x is a df or text --
+from io import BytesIO
+import streamlit as st
 
 def cln_epda(uploaded_file , distname , year , month):
-    global x
-    global y
+    
     try:
-        
-# --- Extract Year & Month ---
-        try:
-            date = (uploaded_file.split(" ")[-1]).split(".")[0]
-            year, month = date.split("-")
-            year, month = int(year), int(month)
-        except Exception  :
-            x = f"epda_cln ERROR: Filename must contain date in 'YYYY-MM' format: {uploaded_file}"
-            y = 0
-            return x ,y
-# --- Read Excel ---
-        try:
-            df = pd.read_excel(io=uploaded_file, skiprows=10 , engine="xlrd")
-        except FileNotFoundError:
-            x = f"epda_cln ERROR: File not found: {uploaded_file}"
-            y = 0
-            return x ,y
-        except Exception as e:
-            x = f"epda_cln ERROR: Error reading Excel file {uploaded_file}: {e}"
-           
-            y = 0
-            return x ,y
-        
-# --- Validate required columns ---
+        df = pd.read_excel(BytesIO(uploaded_file.getbuffer()), engine="xlrd")
+
         required_cols = ['Unnamed: 0', 'Unnamed: 1', 'Unnamed: 2', 'النسبة', 'Unnamed: 4',       
                         'الكمية المباعة', 'Unnamed: 6', 'Unnamed: 7', 'Unnamed: 8',
                         'Unnamed: 9', 'القيمة', 'Unnamed: 11', 'الصنف', 'Unnamed: 13',
@@ -51,54 +24,30 @@ def cln_epda(uploaded_file , distname , year , month):
             missing = [col for col in expected if col not in actual]
             extra = [col for col in actual if col not in expected]
             order_issue = (set(expected) == set(actual)) and (expected != actual)
-
-            msg = "ERROR: Columns do not match exactly.\n"
             if missing:
-                msg += f"Missing columns: {missing} /////"
-                
+                st.error(f"Missing columns: {missing} ")
             if extra:
-                msg += f"Unexpected columns: {extra} /////"
-                
+                st.error(f"Unexpected columns: {extra}")
             if order_issue:
-                msg += f"Order mismatch. : Expected order: {expected} ////// Found order: {actual}"
-                
-
-            x = msg
-           
-            y = 0
-            return x ,y
+                st.error(f"Order mismatch. : Expected order: {expected}")
+                st.error(f"Order mismatch. : Found order: {actual}")
             
-# --- cleaning ---
-        df = df.rename(columns={'Unnamed: 15':'client name','Unnamed: 28':'client code','الكمية المباعة':'sales Units','القيمة':'sales Value','الصنف':'item name','كود الصنف':'item code'})
-        selected_cols = ['client code','client name','item name','item code','sales Units','sales Value']
-        df = df[selected_cols]
-        df["client name"] = df["client name"].replace("بيوتك فارما", np.nan)
-        df[['client code','client name','sales Units']] = df[['client code','client name','sales Units']].ffill()
-        df = df[df['item code'].notna()]
-        
-# --- Add Year & Month ---
-        df["Year"] = year
-        df["Month"] = month
+        else:    
+            cleaned_file = df.rename(columns={'Unnamed: 15':'client name','Unnamed: 28':'client code','الكمية المباعة':'sales Units','القيمة':'sales Value','الصنف':'item name','كود الصنف':'item code'})
+            selected_cols = ['client code','client name','item name','item code','sales Units','sales Value']
+            cleaned_file = cleaned_file[selected_cols]
+            cleaned_file["client name"] = cleaned_file["client name"].replace("بيوتك فارما", np.nan)
+            cleaned_file[['client code','client name','sales Units']] = cleaned_file[['client code','client name','sales Units']].ffill()
+            cleaned_file = cleaned_file[cleaned_file['item code'].notna()]
+            cleaned_file['dist_name'] = distname
+            cleaned_file['year'] = year
+            cleaned_file['month'] = month
+            cleaned_file.reset_index(drop=True, inplace=True)
 
-
-
-       # --- returning dataframe if it is not empty ---
-        if df.empty:
-            x = f"epda_cln ERROR: No valid data after cleaning-Empty table.  {uploaded_file}"
-
-            y = 0
-            return x ,y
-        else:
+            if df.empty:
+                st.error("❌ EPDA ERROR: No valid data after cleaning (empty table).")
+            else:
+                return cleaned_file , distname , year , month
             
-            x = df
-            y = 1
-            return x ,y,month,year
-        
     except Exception as e:
-        x = f"epda_cln ERROR: Unexpected error in epda_cln(): {e}"
-       
-        y = 0
-        return x ,y
-    
-
-
+        st.error(f"❌ EPDA ERROR: Unexpected error: {str(e)}")
