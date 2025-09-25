@@ -5,7 +5,7 @@ import streamlit as st
 def cln_pos(uploaded_file , distname , year , month):
     
     try:
-        df = pd.read_excel(BytesIO(uploaded_file.getbuffer()), skiprows=1,engine="xlrd")
+        df = pd.read_excel(BytesIO(uploaded_file.getbuffer()),engine="xlrd")
 
         required_cols = ['English Name', 'Product Code', 'Product Name', 'Territory Code',  
        'Territory Name', 'Sales Value', 'Credit Value', 'Net Sales Value','Sales', 'Bonus']
