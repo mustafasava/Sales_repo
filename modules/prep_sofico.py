@@ -1,23 +1,33 @@
-from sqlalchemy import create_engine, text
+import numpy as np
+import pandas as pd
+import streamlit as st
 
-def prep_sofico(x,y,month=None,year=None):
-    if y == 1:
-        try:
-            engine = create_engine("sqlite:///.\\DBs\\dist_native\\dist_native.db")
+def prep_sofico(cleaned_file , distname , year , month):
+    try:
+        prepared_file = cleaned_file.rename(columns={
+        "ItemID": "item_code",
+        "ItemName": "item_name",
+        "ZipCodeName": "territory_name",
+        "ADDRESS": "address"
+    })
+        
+        prepared_file["territory_code"] = prepared_file.apply(
+            lambda row: 99009900 if row["ZipCode"] == 1101 and (
+                "تجمع" in str(row["address"]) or "مدينت" in str(row["address"])
+            )
+            else row["OrderAccount"] if row["ZipCode"] == 1102
+            else row["ZipCode"],
+            axis=1
+        )
 
-            with open(".\\DBs\\dist_native\\queries\\sofico_prep.sql", "r", encoding="utf-8") as f:
-                sql_query = f.read()
+        prepared_file["sales_units"] = prepared_file["SalesQty"] + prepared_file["ReturnQty"]
+        prepared_file["bonus_units"] = prepared_file["BonusQty"] + prepared_file["ReturnBonus"]
+            
+        prepared_file = prepared_file[[
+            "item_code", "item_name", "territory_name", "address",
+            "sales_units", "bonus_units", "dist_name","year","month"]]
+        return prepared_file , distname , year , month
 
-            with engine.begin() as conn:
-                conn.execute(text("DELETE FROM prep_sofico Where Month = :month AND Year = :year"),{"month": month, "year": year})
-                conn.execute(text("PRAGMA incremental_vacuum;"))
-                conn.execute(text(sql_query),{"month": month, "year": year})
-                conn.execute(text("PRAGMA incremental_vacuum;"))
-                x = f" {x} Data Prepared Successfully."
-                return x,y
-        except Exception as e:
-            x = f"\n Error happened while preparing :\n Details : {e}"
-            y=0
-            return x,y
-    else:
-        return x,y
+        
+    except Exception as e:
+        st.error(f"Error : {e}")

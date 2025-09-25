@@ -1,45 +1,18 @@
 import pandas as pd
-
-
-
-
-x = None #--- A global variable holder for messages or returned DataFrame --
-y = None #--- A global variable holder for identifying the returned x is a df or text --
-
+from io import BytesIO
+import streamlit as st
 
 def cln_sofico(uploaded_file , distname , year , month):
-    global x
+    
     try:
-# --- Extract Year & Month ---
-        try:
-            date = (uploaded_file.split(" ")[-1]).split(".")[0]
-            year, month = date.split("-")
-            year, month = int(year), int(month)
-        except Exception  :
-            x = f"sofico_cln ERROR: Filename must contain date in 'YYYY-MM' format: {uploaded_file}"
-            
-            y = 0
-            return x ,y
-# --- Read Excel ---
-        try:
-            df = pd.read_excel(io=uploaded_file)
-        except FileNotFoundError:
-            x = f"sofico_cln ERROR: File not found: {uploaded_file}"
-            
-            y = 0
-            return x ,y
-        except Exception as e:
-            x = f"sofico_cln ERROR: Error reading Excel file {uploaded_file}: {e}"
-            
-            y = 0
-            return x ,y
-# --- Validate required columns ---
+        df = pd.read_excel(BytesIO(uploaded_file.getbuffer()),engine="xlrd")
+
         required_cols = ['VENDOR', 'VendorName', 'InventSiteID', 'ItemID', 'ItemName',        
-       'PrimaryVendorID', 'OrderAccount', 'Name', 'ADDRESS', 'CustGroup',   
-       'CUSTGROUPNAME', 'State', 'statename', 'ZipCode', 'INVOICEID',       
-       'INVOICEDATE', 'SALESPRICE', 'LINEAMOUNT', 'ZipCodeName', 'SalesQty',
-       'BonusQty', 'ReturnQty', 'ReturnBonus', 'NET SALES', 'من المدة',     
-       'الى المدة']
+                            'PrimaryVendorID', 'OrderAccount', 'Name', 'ADDRESS', 'CustGroup',   
+                            'CUSTGROUPNAME', 'State', 'statename', 'ZipCode', 'INVOICEID',       
+                            'INVOICEDATE', 'SALESPRICE', 'LINEAMOUNT', 'ZipCodeName', 'SalesQty',
+                            'BonusQty', 'ReturnQty', 'ReturnBonus', 'NET SALES', 'من المدة',     
+                            'الى المدة']
         expected = required_cols
         actual = list(df.columns)
 
@@ -48,48 +21,25 @@ def cln_sofico(uploaded_file , distname , year , month):
             missing = [col for col in expected if col not in actual]
             extra = [col for col in actual if col not in expected]
             order_issue = (set(expected) == set(actual)) and (expected != actual)
-
-            msg = "ERROR: Columns do not match exactly.\n"
             if missing:
-                msg += f"Missing columns: {missing} /////"
-                
+                st.error(f"Missing columns: {missing} ")
             if extra:
-                msg += f"Unexpected columns: {extra} /////"
-                
+                st.error(f"Unexpected columns: {extra}")
             if order_issue:
-                msg += f"Order mismatch. : Expected order: {expected} ////// Found order: {actual}"
-                
-
-            x = msg
+                st.error(f"Order mismatch. : Expected order: {expected}")
+                st.error(f"Order mismatch. : Found order: {actual}")
             
-            y = 0
-            return x ,y
+        else:    
+            cleaned_file = cleaned_file.dropna(subset = ['ItemID', 'ItemName','PrimaryVendorID','OrderAccount'], how="all")
+            cleaned_file['dist_name'] = distname
+            cleaned_file['year'] = year
+            cleaned_file['month'] = month
+            cleaned_file.reset_index(drop=True, inplace=True)
+
+            if df.empty:
+                st.error("❌ SOFICO ERROR: No valid data after cleaning (empty table).")
+            else:
+                return cleaned_file , distname , year , month
             
-# --- Drop rows with null ---
-        drop_conditions_cols = ['ItemID', 'ItemName','PrimaryVendorID','OrderAccount']
-        df = df.dropna(subset = drop_conditions_cols, how="all")
-
-# --- Add Year & Month ---
-        df["Year"] = year
-        df["Month"] = month
-
-
-
-# --- returning dataframe if it is not empty ---
-        if df.empty:
-            x = f"sofico_cln ERROR: No valid data after cleaning-Empty table.  {uploaded_file}"
-
-            y = 0
-            return x ,y
-        else:
-            
-            x = df
-            y = 1
-            return x ,y,month,year
-
     except Exception as e:
-        x = f"sofico_cln ERROR: Unexpected error in sofico_cln(): {e}"
-        
-        y = 0
-        return x ,y
-    
+        st.error(f"❌ SOFICO ERROR: Unexpected error: {str(e)}")
