@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-def prep_ibs(cleaned_file , distname , year , month):
+def prep_pos(cleaned_file , distname , year , month):
     try:
         prepared_file = cleaned_file.rename(columns={
                 "Product Code": "item_code",
