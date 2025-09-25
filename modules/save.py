@@ -26,7 +26,7 @@ def save(df, distname, year, month, sheettype):
         files = repo.get_contents(folder)  # list of files in the folder
         existing_files = [f.path for f in files]
     except:
-        st.error(f"Can't find a folder for {sheettype}, please inform Admin")
+        st.error(f"Can't find a folder for {sheettype}. Saving Not Done !, please inform Admin")
 
     if save_path in existing_files:
         try:
@@ -39,7 +39,7 @@ def save(df, distname, year, month, sheettype):
             )
             st.info(f"while saving in {folder} I found a sheet with same name, I updated it.")
         except Exception as e:
-            st.error(f"{e}")
+            st.error(f"error happened while updating. not saved.")
             
     else:
         try:
@@ -50,4 +50,4 @@ def save(df, distname, year, month, sheettype):
                 buffer.read()
             )
         except Exception as e:
-            st.error(f"{e}")
+            st.error(f"error happened while adding. not saved.")
