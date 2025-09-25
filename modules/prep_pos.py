@@ -13,6 +13,9 @@ def prep_pos(cleaned_file , distname , year , month):
                 "Bonus": "bonus_units"
         })
 
+        prepared_file["sales_units"] = prepared_file["sales_units"].astype(float)
+        prepared_file["bonus_units"] = prepared_file["bonus_units"].astype(float)
+
         split_codes = ['280C6','406C6','407C6','M0009']
         mask = prepared_file["territory_code"].isin(split_codes)
 
