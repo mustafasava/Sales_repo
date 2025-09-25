@@ -38,7 +38,7 @@ def save(df, distname, year, month, sheettype):
                 contents.sha
             )
             st.info(f"while saving in {folder} I found a sheet with same name, I updated it.")
-        except Exception as e:
+        except :
             st.error(f"error happened while updating. not saved.")
             
     else:
@@ -49,5 +49,5 @@ def save(df, distname, year, month, sheettype):
                 f"Add {file_name}",
                 buffer.read()
             )
-        except Exception as e:
+        except :
             st.error(f"error happened while adding. not saved.")
