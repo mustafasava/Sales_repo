@@ -11,7 +11,10 @@ g = Github(GITHUB_TOKEN)
 repo = g.get_repo(GITHUB_REPO)
 
 def save(df, distname, year, month, sheettype):
-    folder = "cleaned_src" if sheettype == "cln" else "prepared_src"
+    if sheettype == "Cleaned":
+        folder = "cleaned_src"
+    else :
+        folder = "prepared_src"
     file_name = f"{sheettype}_{distname}_{year}_{month}.xlsx"
     save_path = f"{folder}/{file_name}"
 
@@ -22,8 +25,8 @@ def save(df, distname, year, month, sheettype):
     try:
         contents = repo.get_contents(save_path)
         repo.update_file(save_path, f"Update {file_name}", buffer.read(), contents.sha)
-        st.success("great")
+        st.success(f"There is a sheet with same name : {sheettype} Updated successfully !")
     except:
         buffer.seek(0)
         repo.create_file(save_path, f"Add {file_name}", buffer.read())
-        st.success("great")
+        st.success(f"This is a new sheet : {sheettype} Added successfully !")

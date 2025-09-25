@@ -11,12 +11,12 @@ def admin():
     if uploaded is not None:
         
         cleaned = dist_list[uploaded[1]][0](uploaded[0], uploaded[1], uploaded[2], uploaded[3])
-        save(cleaned[0], cleaned[1], cleaned[2], cleaned[3],"cln")
+        save(cleaned[0], cleaned[1], cleaned[2], cleaned[3],"Cleaned")
         
         if cleaned is not None:
             
             prepared = dist_list[cleaned[1]][1](cleaned[0], cleaned[1], cleaned[2], cleaned[3])
-            save(prepared[0], prepared[1], prepared[2], prepared[3],"prep")
+            save(prepared[0], prepared[1], prepared[2], prepared[3],"Prepared")
 
     
 
