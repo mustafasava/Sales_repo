@@ -1,23 +1,26 @@
-from sqlalchemy import create_engine, text
+import numpy as np
+import pandas as pd
+import streamlit as st
 
-def prep_epda(x,y,month=None,year=None):
-    if y == 1:
-        try:
-            engine = create_engine("sqlite:///.\\DBs\\dist_native\\epda_db\\epda.db")
+def prep_epda(cleaned_file , distname , year , month):
+    try:
+        prepared_file = cleaned_file.rename(columns={
+            "item code": "item_code",
+            "item name": "item_name",
+            "client name": "client_name",
+            "client code": "client_code",
+            "sales Units": "sales_units",
+            
+        })   [[ "item_code", "item_name", "client_name", "client_code", "sales_units" ]]
 
-            with open(".\\DBs\\dist_native\\queries\\epda_prep.sql", "r", encoding="utf-8") as f:
-                sql_query = f.read()
+        prepared_file["territory_name"] = prepared_file["client_name"].apply(lambda x: (
+                            x.split("-", 1)[1].strip() if "-" in x and x.split("-", 1)[1].strip() != "" else
+                            (x.split("-", 1)[0].strip() if "-" in x and x.split("-", 1)[0].strip() != "" else x.strip())
+                        )
+                    )
+       
+        return prepared_file , distname , year , month
 
-            with engine.begin() as conn:
-                conn.execute(text("DELETE FROM prep_epda Where Month = :month AND Year = :year"),{"month": month, "year": year})
-                conn.execute(text("PRAGMA incremental_vacuum;"))
-                conn.execute(text(sql_query),{"month": month, "year": year})
-                conn.execute(text("PRAGMA incremental_vacuum;"))
-                x = f" {x} Data Prepared Successfully."
-                return x,y
-        except Exception as e:
-            x = f"\n Error happened while preparing :\n Details : {e}"
-            y=0
-            return x,y
-    else:
-        return x,y
+        
+    except Exception as e:
+        st.error(f"Error : {e}")
