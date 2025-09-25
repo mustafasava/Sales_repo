@@ -5,7 +5,7 @@ import streamlit as st
 def cln_sofico(uploaded_file , distname , year , month):
     
     try:
-        df = pd.read_excel(BytesIO(uploaded_file.getbuffer()),engine="xlrd")
+        df = pd.read_excel(BytesIO(uploaded_file.getbuffer()))
 
         required_cols = ['VENDOR', 'VendorName', 'InventSiteID', 'ItemID', 'ItemName',        
                             'PrimaryVendorID', 'OrderAccount', 'Name', 'ADDRESS', 'CustGroup',   
