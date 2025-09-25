@@ -22,8 +22,11 @@ def save(df, distname, year, month, sheettype):
     df.to_excel(buffer, index=False)
     buffer.seek(0)
 
-    files = repo.get_contents(folder)  # list of files in the folder
-    existing_files = [f.path for f in files]
+    try:
+        files = repo.get_contents(folder)  # list of files in the folder
+        existing_files = [f.path for f in files]
+    except:
+        st.error(f"Can't find a folder for {sheettype}, please inform Admin")
 
     if save_path in existing_files:
         try:
