@@ -13,7 +13,8 @@ if st.sidebar.button("Logout"):
 if st.session_state.role == "admin":
     try:
         admin()
-        distname = st.selectbox("Select Distributor", dist_list,placeholder="choose distributor")
+        options = "" + dist_list
+        distname = st.selectbox("Select Distributor", dist_list,options="choose distributor")
 
         if st.button("Run Mapping Process"):
             if not distname:
