@@ -14,7 +14,7 @@ def prep_ibs(cleaned_file , distname , year , month):
             "FU": "bonus_units"
         })
 
-        prepared_file["territory_name"] = np.where(prepared_file["territory_name"] == "Template District                       ",prepared_file["brick_name"],
+        prepared_file["brick_code"] = np.where(prepared_file["territory_name"] == "Template District                       ",prepared_file["brick_name"],
                                         np.where(prepared_file["territory_name"] == "QENA I /RED SEA RED SEA                 ", prepared_file["governorate_name"],
                                         np.where((prepared_file["territory_name"] == "NASR CITY NASR CITY                     ") 
                                                 &(
@@ -24,7 +24,7 @@ def prep_ibs(cleaned_file , distname , year , month):
         
         prepared_file = prepared_file[[
             "item_code", "item_name", "brick_name", "governorate_name",
-            "territory_name", "sales_units", "bonus_units", "dist_name","year","month"]]
+            "brick_code", "sales_units", "bonus_units", "dist_name","year","month"]]
         return prepared_file , distname , year , month
 
         

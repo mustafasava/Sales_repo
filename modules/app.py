@@ -1,7 +1,7 @@
 import streamlit as st
 from auth import login, logout
 from admin import admin
-from info import dist_list
+
 # ------------------- LOGIN -------------------
 if not login():
     st.stop()

@@ -9,7 +9,7 @@ def prep_egydrug(cleaned_file , distname , year , month):
         prepared_file = prepared_file.rename(columns={
                             "ITEM_CODE": "item_code",
                             "ITEM_NAME": "item_name",
-                            "CUSTOMER_CODE": "customer_code",
+                            "CUSTOMER_CODE": "brick_code",
                             "CUSTOMER_NAME": "customer_name",
                             "CUSTOMER_ADDRESS": "customer_address",
                             "BRANCH_NAME": "branch_name",
@@ -29,7 +29,7 @@ def prep_egydrug(cleaned_file , distname , year , month):
                         axis=1)
         
         prepared_file = prepared_file[[
-            "item_code", "item_name", "customer_code", "customer_name",
+            "item_code", "item_name", "brick_code", "customer_name",
             "customer_address", "branch_name", "sales_units","bonus_units", "dist_name","year","month"]]
         return prepared_file , distname , year , month
 

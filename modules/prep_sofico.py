@@ -11,7 +11,7 @@ def prep_sofico(cleaned_file , distname , year , month):
         "ADDRESS": "address"
     })
         
-        prepared_file["territory_code"] = prepared_file.apply(
+        prepared_file["brick_code"] = prepared_file.apply(
             lambda row: 99009900 if row["ZipCode"] == 1101 and (
                 "تجمع" in str(row["address"]) or "مدينت" in str(row["address"])
             )
@@ -22,9 +22,11 @@ def prep_sofico(cleaned_file , distname , year , month):
 
         prepared_file["sales_units"] = prepared_file["SalesQty"] + prepared_file["ReturnQty"]
         prepared_file["bonus_units"] = prepared_file["BonusQty"] + prepared_file["ReturnBonus"]
+
+        prepared_file["brick_code"] = prepared_file["brick_code"].astype(str)
             
         prepared_file = prepared_file[[
-            "item_code", "item_name", "territory_name", "address",
+            "item_code", "item_name", "territory_name","brick_code", "address",
             "sales_units", "bonus_units", "dist_name","year","month"]]
         return prepared_file , distname , year , month
 

@@ -13,7 +13,7 @@ def prep_epda(cleaned_file , distname , year , month):
             
         })   [[ "item_code", "item_name", "client_name", "client_code", "sales_units" ]]
 
-        prepared_file["territory_name"] = prepared_file["client_name"].apply(lambda x: (
+        prepared_file["brick_code"] = prepared_file["client_name"].apply(lambda x: (
                             x.split("-", 1)[1].strip() if "-" in x and x.split("-", 1)[1].strip() != "" else
                             (x.split("-", 1)[0].strip() if "-" in x and x.split("-", 1)[0].strip() != "" else x.strip())
                         )

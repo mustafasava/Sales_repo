@@ -19,13 +19,6 @@ dist_list = {
 }
 
 
-dist_list = {
-    "ibs": [cln_ibs,prep_ibs],
-    "pos": [cln_pos,prep_pos],
-    "sofico": [cln_sofico,prep_sofico],
-    "epda": [cln_epda,prep_epda],
-    "egydrug": [cln_egydrug,prep_egydrug]}
-
 
 auth = {"Mustafa Muhammed": ["admin", "sava1998", "all"],
         "Mohamed Youssef": ["sales", "alex123", "alex"],
