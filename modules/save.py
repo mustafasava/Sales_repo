@@ -62,6 +62,6 @@ def save(data, distname, year, month, sheettype):
                 f"Add {file_name}",
                 buffer.read()
             )
-            st.success(f"{file_name} added to {folder}")
+            
         except:
             st.error("Error happened while adding. Not saved.")
