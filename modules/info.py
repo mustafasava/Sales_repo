@@ -27,9 +27,12 @@ dist_list = {
     "egydrug": [cln_egydrug,prep_egydrug]}
 
 
-auth = {"user1": ["admin", "1234", "all"],
-        "user2": ["sales", "1234", "alex"],
-        "user3": ["sales", "1234", "cairo"]}
+auth = {"Sadmin": ["admin", "sava1998", "all"],
+        "Mohamed Youssef": ["sales", "alex123", "alex"],
+        "Hossam Mohamed": ["sales", "cairo1234", "cairo"],
+        "Ahmed Reda": ["sales", "upper12345", "upper"],
+        "Mohamed Saleh": ["sales", "MS1234", "all"],
+        "Mohamed Rayes": ["sales", "MR1234", "all"],   }
 
 
 
