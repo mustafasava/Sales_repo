@@ -31,7 +31,7 @@ def save(data, distname, year, month, sheettype):
         data.to_excel(buffer, index=False, sheet_name="Sheet1")
     else:
         st.error("Provided data is neither a DataFrame nor a dictionary of DataFrames.")
-        return
+        
 
     buffer.seek(0)
 
@@ -40,7 +40,7 @@ def save(data, distname, year, month, sheettype):
         existing_files = [f.path for f in files]
     except:
         st.error(f"Can't find a folder for {sheettype}. Saving Not Done !, please inform Admin")
-        return
+        
 
     if save_path in existing_files:
         try:
