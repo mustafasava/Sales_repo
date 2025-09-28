@@ -14,7 +14,7 @@ if st.session_state.role == "admin":
     try:
         admin()
         options = "" + dist_list
-        distname = st.selectbox("Select Distributor", options,placeholder="choose distributor")
+        distname = st.selectbox("Select Distributor", options, placeholder="choose distributor")
 
         if st.button("Run Mapping Process"):
             if not distname:
