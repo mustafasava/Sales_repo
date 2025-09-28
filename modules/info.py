@@ -32,7 +32,7 @@ auth = {"Sadmin": ["admin", "sava1998", "all"],
         "Hossam Mohamed": ["sales", "cairo1234", "cairo"],
         "Ahmed Reda": ["sales", "upper12345", "upper"],
         "Mohamed Saleh": ["sales", "MS1234", "all"],
-        "Mohamed Rayes": ["sales", "MR1234", "all"],   }
+        "Mohamed Rayes": ["sales", "MR1234", "all"]   }
 
 
 
