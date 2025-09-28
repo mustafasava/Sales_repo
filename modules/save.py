@@ -3,6 +3,7 @@ from io import BytesIO
 import pandas as pd
 from github import Github
 import streamlit as st
+
 # GitHub setup
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = "mustafasava/Sales_repo"
@@ -10,16 +11,28 @@ GITHUB_REPO = "mustafasava/Sales_repo"
 g = Github(GITHUB_TOKEN)
 repo = g.get_repo(GITHUB_REPO)
 
-def save(df, distname, year, month, sheettype):
+def save(data, distname, year, month, sheettype):
     if sheettype == "cleaned":
         folder = "cleaned_src"
-    else :
+    else:
         folder = "prepared_src"
+
     file_name = f"{sheettype}_{distname}_{year}_{month}.xlsx"
     save_path = f"{folder}/{file_name}"
 
     buffer = BytesIO()
-    df.to_excel(buffer, index=False)
+
+    # ✅ check if single DataFrame or dict of DataFrames
+    if isinstance(data, dict):
+        with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+            for sheet, df in data.items():
+                df.to_excel(writer, sheet_name=sheet, index=False)
+    elif isinstance(data, pd.DataFrame):
+        data.to_excel(buffer, index=False, sheet_name="Sheet1")
+    else:
+        st.error("Provided data is neither a DataFrame nor a dictionary of DataFrames.")
+        return
+
     buffer.seek(0)
 
     try:
@@ -27,6 +40,7 @@ def save(df, distname, year, month, sheettype):
         existing_files = [f.path for f in files]
     except:
         st.error(f"Can't find a folder for {sheettype}. Saving Not Done !, please inform Admin")
+        return
 
     if save_path in existing_files:
         try:
@@ -38,9 +52,8 @@ def save(df, distname, year, month, sheettype):
                 contents.sha
             )
             st.info(f"while saving in {folder} I found a sheet with same name, I updated it.")
-        except :
-            st.error(f"error happened while updating. not saved.")
-            
+        except:
+            st.error("Error happened while updating. Not saved.")
     else:
         try:
             buffer.seek(0)
@@ -49,5 +62,6 @@ def save(df, distname, year, month, sheettype):
                 f"Add {file_name}",
                 buffer.read()
             )
-        except :
-            st.error(f"error happened while adding. not saved.")
+            st.success(f"{file_name} added to {folder}")
+        except:
+            st.error("Error happened while adding. Not saved.")
