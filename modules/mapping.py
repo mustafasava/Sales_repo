@@ -23,7 +23,7 @@ def mapping(prep_df,dist_name,year,month):
     if not missed_products.empty:
         download(missed_products, filename=f"missed_products_{dist_name}_{year}_{month}.xlsx")
     else:
-        msgp = "No missed products"
+        st.success("No missing products")
 
     
 
@@ -40,7 +40,7 @@ def mapping(prep_df,dist_name,year,month):
     if not missed_bricks.empty:
         download(missed_bricks, filename=f"missed_bricks_{dist_name}_{year}_{month}.xlsx")
     else:
-        msgb = "No missed bricks"
+        st.success("No missing bricks")
 
     
     if missed_bricks.empty and missed_products.empty:
