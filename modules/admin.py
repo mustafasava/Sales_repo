@@ -2,6 +2,7 @@ from upload import upload
 import streamlit as st
 from info import dist_list
 from save import save
+from mapping import mapping
 
 
 def admin():
@@ -17,12 +18,11 @@ def admin():
             if cleaned is not None:
                 
                 prepared = dist_list[cleaned[1]][1](cleaned[0], cleaned[1], cleaned[2], cleaned[3])
-                save(prepared[0], prepared[1], prepared[2], prepared[3],"prepared")
                 
-
                 if prepared is not None:
-                    
-                    st.success(f"( {prepared[1]} ) sheet has been uploaded, cleaned, prepared and saved successfully !")
+                    mapped = mapping(prepared[0],prepared[1],prepared[2],prepared[3])
+                    save(mapped[0], mapped[1], mapped[2], mapped[3],"prep")
+                    st.success(f"( {mapped[1]} ) sheet has been uploaded, cleaned, prepared, mapped and saved successfully !")
 
         
     except Exception as e:
