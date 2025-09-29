@@ -35,7 +35,7 @@ def mapping(prep_df,dist_name,year,month):
         how="left"
     )
     
-    missed_bricks = merged_bricks[merged_bricks["dist_brickcode"].isna()][["dist_brickcode"]+dist_list[dist_name][2]].drop_duplicates()
+    missed_bricks = merged_bricks[merged_bricks["dist_brickcode"].isna()][dist_list[dist_name][2]+["dist_brickcode"]].drop_duplicates()
 
     if not missed_bricks.empty:
         download(missed_bricks, filename=f"missed_bricks_{dist_name}_{year}_{month}.xlsx")

@@ -12,10 +12,10 @@ from prep_egydrug import prep_egydrug
 
 dist_list = {
     "ibs": [cln_ibs, prep_ibs,["brick_name", "governorate_name","brick_code"]],
-    "pos": [cln_pos, prep_pos,["brick_code", "territory_name"]],
-    "sofico": [cln_sofico, prep_sofico,["territory_name","brick_code", "address"]],
+    "pos": [cln_pos, prep_pos,["territory_name","brick_code"]],
+    "sofico": [cln_sofico, prep_sofico,["territory_name", "address","brick_code"]],
     "epda": [cln_epda, prep_epda,["client_name", "client_code"]],
-    "egydrug": [cln_egydrug, prep_egydrug,["brick_code", "customer_name","customer_address", "branch_name"]]
+    "egydrug": [cln_egydrug, prep_egydrug,[ "customer_name","customer_address", "branch_name","brick_code"]]
 }
 
 
