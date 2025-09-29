@@ -55,6 +55,6 @@ def mapping(prep_df,dist_name,year,month):
             right_on="dist_brickcode",
             how="left"
         )
-        st.success(f"{msgp}, {msgb}.")
+        
         return final_merged , dist_name, year ,month
         
