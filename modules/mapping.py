@@ -56,5 +56,5 @@ def mapping(prep_df,dist_name,year,month):
         
         else:
             return None
-    except:
-        st.error("error in mapping")   
+    except Exception as e:
+        st.error(f"{e}")   
