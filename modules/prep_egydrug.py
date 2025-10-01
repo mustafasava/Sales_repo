@@ -15,7 +15,7 @@ def prep_egydrug(cleaned_file , distname , year , month):
                             
                         })
         
-
+        prepared_file["CUSTOMER_CODE"] = prepared_file["CUSTOMER_CODE"].astype(str)
         prepared_file["BRANCH_CODE"] = prepared_file["BRANCH_CODE"].astype(str)
         prepared_file["brick_code"] = np.where(
                                     prepared_file["BRANCH_CODE"].str.startswith("06"),
