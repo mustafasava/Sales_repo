@@ -15,7 +15,7 @@ def prep_egydrug(cleaned_file , distname , year , month):
                             "CUSTOMER_CODE":"brick_code"
                         })
         
-
+        prepared_file["brick_code"] = prepared_file["brick_code"].astype(str)
         prepared_file["sales_units"] = prepared_file.apply(
                         lambda x: x["QTY_INVOICE"] + x["RETURN_QTY"]
                         if ("بونص" not in str(x["STATUS_NAME"])) and ("بونص" not in str(x["STATUS_DESC"]))
