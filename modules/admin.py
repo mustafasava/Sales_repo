@@ -8,7 +8,7 @@ from mapping import check_missing
 def admin():
 
     try:
-        uploaded_map = upload(st.sidebar.file_uploader("Upload Mapping file", type=["xlsx", "xls"]))
+        st.sidebar.file_uploader("Upload Mapping file", type=["xlsx", "xls"])
         uploaded = upload(st.file_uploader("Upload Excel file", type=["xlsx", "xls"]))
 
         if uploaded is not None:
