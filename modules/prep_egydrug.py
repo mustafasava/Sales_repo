@@ -17,7 +17,7 @@ def prep_egydrug(cleaned_file , distname , year , month):
                                     prepared_file["BRANCH_CODE"].str.startswith("06"),
                                     prepared_file["BRANCH_CODE"], 
                                     prepared_file["CUSTOMER_CODE"] 
-                                ).astype(str)
+                                )
 
         prepared_file["sales_units"] = prepared_file.apply(
                         lambda x: x["QTY_INVOICE"] + x["RETURN_QTY"]
