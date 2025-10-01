@@ -12,15 +12,11 @@ def prep_egydrug(cleaned_file , distname , year , month):
                             "CUSTOMER_CODE": "brick_code",
                             "CUSTOMER_NAME": "customer_name",
                             "CUSTOMER_ADDRESS": "customer_address",
-                            "BRANCH_NAME": "branch_name",
-                            "CUSTOMER_CODE":"brick_code"
+                            "BRANCH_NAME": "branch_name"
+                            
                         })
-<<<<<<< HEAD
         
         
-=======
-
->>>>>>> parent of ff550e1 (m)
         prepared_file["sales_units"] = prepared_file.apply(
                         lambda x: x["QTY_INVOICE"] + x["RETURN_QTY"]
                         if ("بونص" not in str(x["STATUS_NAME"])) and ("بونص" not in str(x["STATUS_DESC"]))
