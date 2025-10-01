@@ -13,6 +13,7 @@ def prep_pos(cleaned_file , distname , year , month):
                 "Bonus": "bonus_units"
         })
 
+        prepared_file["brick_code"] = prepared_file["brick_code"].astype(str)
         prepared_file["sales_units"] = prepared_file["sales_units"].astype(float)
         prepared_file["bonus_units"] = prepared_file["bonus_units"].astype(float)
 

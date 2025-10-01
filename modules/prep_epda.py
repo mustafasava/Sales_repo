@@ -17,7 +17,7 @@ def prep_epda(cleaned_file , distname , year , month):
                             x.split("-", 1)[1].strip() if "-" in x and x.split("-", 1)[1].strip() != "" else
                             (x.split("-", 1)[0].strip() if "-" in x and x.split("-", 1)[0].strip() != "" else x.strip())
                         )
-                    )
+                    ).astype(str)
        
         return prepared_file , distname , year , month
 

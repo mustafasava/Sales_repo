@@ -20,7 +20,7 @@ def prep_ibs(cleaned_file , distname , year , month):
                                                 &(
                                                     (prepared_file["governorate_name"] == "القاهره الجديده     ") |
                                                     (prepared_file["governorate_name"].str.contains("عاصم", na=False))
-                                                    ),"القاهره الجديده     ",prepared_file["territory_name"])))
+                                                    ),"القاهره الجديده     ",prepared_file["territory_name"]))).astype(str)
         
         prepared_file = prepared_file[[
             "item_code", "item_name", "brick_name", "governorate_name",

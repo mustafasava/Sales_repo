@@ -10,14 +10,13 @@ def mapping(prep_df,dist_name,year,month):
     products = pd.read_excel(mapping_file, sheet_name="products")
     bricks = pd.read_excel(mapping_file, sheet_name="bricks")
 
-    
     merged_products = prep_df.merge(
         products,
         left_on="item_code",
         right_on="dist_itemcode",
         how="left"
     )
-    
+
     missed_products = merged_products[merged_products["dist_itemcode"].isna()][["item_code","item_name","dist_itemcode"]].drop_duplicates()
 
     if not missed_products.empty:
@@ -26,8 +25,6 @@ def mapping(prep_df,dist_name,year,month):
         st.success("No missing products")
 
     
-
-
     merged_bricks = prep_df.merge(
         bricks,
         left_on="brick_code",
