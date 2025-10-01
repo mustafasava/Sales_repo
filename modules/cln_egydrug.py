@@ -82,9 +82,10 @@ def cln_egydrug(uploaded_file , distname , year , month):
         dfs = [sales_df,transfer_df,df_stocks]
         
         for i in dfs:
+            i["dist_name"] = distname
             i["year"] = year
             i["month"] = month
-            i["dist_name"] = distname
+            
 
         dfs = {
         "egydrug_sales": sales_df,
