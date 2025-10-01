@@ -3,7 +3,7 @@ from info import dist_list
 from download import download
 import streamlit as st
 
-def mapping(prep_df,dist_name,year,month):
+def check_missing(prep_df,dist_name,year,month):
     try:
         mapping_file = f"./mapping/map_{dist_name}.xlsx"
 
@@ -20,7 +20,7 @@ def mapping(prep_df,dist_name,year,month):
         missed_products = merged_products[merged_products["dist_itemcode"].isna()][["item_code","item_name","dist_itemcode"]].drop_duplicates()
 
         if not missed_products.empty:
-            download(missed_products, filename=f"missed_products_{dist_name}_{year}_{month}.xlsx")
+            download(missed_products, filename=f"{dist_name}_{year}_{month}.xlsx")
         else:
             st.success("No missing products")
 
@@ -58,3 +58,8 @@ def mapping(prep_df,dist_name,year,month):
             return None
     except Exception as e:
         st.error(f"{e}")   
+
+
+def map_append(mapsheet,dist_name,year,month,user,date_time):
+    
+

@@ -2,12 +2,13 @@ from upload import upload
 import streamlit as st
 from info import dist_list
 from save import save
-from mapping import mapping
+from mapping import check_missing
 
 
 def admin():
 
     try:
+        uploaded_map = upload(st.sidebar.file_uploader("Upload Mapping file", type=["xlsx", "xls"]))
         uploaded = upload(st.file_uploader("Upload Excel file", type=["xlsx", "xls"]))
 
         if uploaded is not None:
@@ -19,7 +20,7 @@ def admin():
                 prepared = dist_list[cleaned[1]][1](cleaned[0], cleaned[1], cleaned[2], cleaned[3])
                 
                 if prepared is not None:
-                    mapped = mapping(prepared[0],prepared[1],prepared[2],prepared[3])
+                    mapped = check_missing(prepared[0],prepared[1],prepared[2],prepared[3])
                     
                     if mapped is not None:
 
