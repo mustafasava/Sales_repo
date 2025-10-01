@@ -14,9 +14,9 @@ def admin():
             
             cleaned = dist_list[uploaded[1]][0](uploaded[0], uploaded[1], uploaded[2], uploaded[3])
         
-            if cleaned is not None:
+            # if cleaned is not None:
                 
-                prepared = dist_list[cleaned[1]][1](cleaned[0], cleaned[1], cleaned[2], cleaned[3])
+                # prepared = dist_list[cleaned[1]][1](cleaned[0], cleaned[1], cleaned[2], cleaned[3])
                 
                 # if prepared is not None:
                 #     mapped = mapping(prepared[0],prepared[1],prepared[2],prepared[3])
