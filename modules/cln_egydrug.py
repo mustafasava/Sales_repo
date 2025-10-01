@@ -97,4 +97,4 @@ def cln_egydrug(uploaded_file , distname , year , month):
             return dfs , distname , year , month
             
     except Exception as e:
-        st.error(f"❌ EGYDRUG ERROR: Unexpected error: {str(e)}")
+        st.error(f"❌ EGYDRUG ERROR: Unexpected error: {(e)}")
