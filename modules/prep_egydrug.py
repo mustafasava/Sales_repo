@@ -12,12 +12,9 @@ def prep_egydrug(cleaned_file , distname , year , month):
                             "CUSTOMER_NAME": "customer_name",
                             "CUSTOMER_ADDRESS": "customer_address",
                             "BRANCH_NAME": "branch_name",
+                            "CUSTOMER_CODE":"brick_code"
                         })
-        prepared_file["brick_code"] = np.where(
-                                    prepared_file["BRANCH_CODE"].str.startswith("06"),
-                                    prepared_file["BRANCH_CODE"], 
-                                    prepared_file["CUSTOMER_CODE"] 
-                                )
+        
 
         prepared_file["sales_units"] = prepared_file.apply(
                         lambda x: x["QTY_INVOICE"] + x["RETURN_QTY"]
