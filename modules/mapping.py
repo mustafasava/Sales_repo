@@ -1,8 +1,9 @@
 import pandas as pd
-from info import dist_list
+from info import dist_list,products_list
 # from download import download
 import streamlit as st
 from io import BytesIO
+
 
 def check_missing(prep_df,dist_name,year,month):
     try:
@@ -22,7 +23,13 @@ def check_missing(prep_df,dist_name,year,month):
 
         if not missed_products.empty:
             st.write("### Enter missing mappings")
-            st.data_editor(missed_products, num_rows="fixed")
+            st.data_editor(missed_bricks,column_config={"dist_itemcode": st.column_config.SelectboxColumn("Distributor Item Code",
+            options=products_list,
+            required=True
+        )
+    },
+    hide_index=True
+)
         else:
             st.success("No missing products")
 
