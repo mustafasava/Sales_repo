@@ -9,12 +9,18 @@ def prep_egydrug(cleaned_file , distname , year , month):
         prepared_file = prepared_file.rename(columns={
                             "ITEM_CODE": "item_code",
                             "ITEM_NAME": "item_name",
-                            "CUSTOMER_CODE": "brick_code",
                             "CUSTOMER_NAME": "customer_name",
                             "CUSTOMER_ADDRESS": "customer_address",
                             "BRANCH_NAME": "branch_name"
                             
                         })
+        
+        prepared_file["brick_code"] = np.where(
+                                    prepared_file["BRANCH_CODE"].str.startswith("06"),
+                                    prepared_file["BRANCH_CODE"], 
+                                    prepared_file["CUSTOMER_CODE"] 
+                                ).astype(str)
+        
         
         
         prepared_file["sales_units"] = prepared_file.apply(
