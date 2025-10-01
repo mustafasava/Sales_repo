@@ -9,7 +9,7 @@ def mapping(prep_df,dist_name,year,month):
 
         products = pd.read_excel(mapping_file, sheet_name="products")
         bricks = pd.read_excel(mapping_file, sheet_name="bricks")
-        bricks["dist_brickcode"] = bricks["dist_brickcode"].astype(str)
+        
         merged_products = prep_df.merge(
             products,
             left_on="item_code",

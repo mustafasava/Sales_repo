@@ -5,7 +5,7 @@ import streamlit as st
 def cln_sofico(uploaded_file , distname , year , month):
     
     try:
-        df = pd.read_excel(BytesIO(uploaded_file.getbuffer()))
+        df = pd.read_excel(BytesIO(uploaded_file.getbuffer()),dtype={"ZipCode":str})
 
         required_cols = ['VENDOR', 'VendorName', 'InventSiteID', 'ItemID', 'ItemName',        
                             'PrimaryVendorID', 'OrderAccount', 'Name', 'ADDRESS', 'CustGroup',   
@@ -42,4 +42,4 @@ def cln_sofico(uploaded_file , distname , year , month):
                 return cleaned_file , distname , year , month
             
     except Exception as e:
-        st.error(f"❌ SOFICO ERROR: Unexpected error: {str(e)}")
+        st.error(f"❌ SOFICO ERROR: Unexpected error: {e}")

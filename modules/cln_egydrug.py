@@ -5,9 +5,9 @@ import streamlit as st
 def cln_egydrug(uploaded_file , distname , year , month):
     
     try:
-        df_branches = pd.read_excel(BytesIO(uploaded_file.getbuffer()),sheet_name="Branches Sales")
-        df_pharmacies = pd.read_excel(BytesIO(uploaded_file.getbuffer()),sheet_name="Pharmacy Sales")
-        df_return = pd.read_excel(BytesIO(uploaded_file.getbuffer()),sheet_name="Branch Sales Return")
+        df_branches = pd.read_excel(BytesIO(uploaded_file.getbuffer()),sheet_name="Branches Sales",dtype={"BRANCH_CODE":str,"CUSTOMER_CODE":str})
+        df_pharmacies = pd.read_excel(BytesIO(uploaded_file.getbuffer()),sheet_name="Pharmacy Sales",dtype={"BRANCH_CODE":str,"CUSTOMER_CODE":str})
+        df_return = pd.read_excel(BytesIO(uploaded_file.getbuffer()),sheet_name="Branch Sales Return",dtype={"BRANCH_CODE":str,"CUSTOMER_CODE":str})
         df_transfer = pd.read_excel(BytesIO(uploaded_file.getbuffer()),sheet_name="Transfer")
         df_trnsreturn = pd.read_excel(BytesIO(uploaded_file.getbuffer()),sheet_name="Transfer Return ")
         df_stocks = pd.read_excel(BytesIO(uploaded_file.getbuffer()),sheet_name="Monthly Stocks")
