@@ -1,6 +1,6 @@
 import pandas as pd
 from info import dist_list
-from download import download
+# from download import download
 import streamlit as st
 from io import BytesIO
 
@@ -22,7 +22,7 @@ def check_missing(prep_df,dist_name,year,month):
 
         if not missed_products.empty:
             st.write("### Enter missing mappings")
-            product_edited_df = st.data_editor(missed_products, num_rows="fixed")
+            st.data_editor(missed_products, num_rows="fixed")
         else:
             st.success("No missing products")
 
@@ -37,7 +37,7 @@ def check_missing(prep_df,dist_name,year,month):
         missed_bricks = merged_bricks[merged_bricks["dist_brickcode"].isna()][dist_list[dist_name][2]+["dist_brickcode"]].drop_duplicates()
 
         if not missed_bricks.empty:
-            brick_edited_df = st.data_editor(missed_bricks, num_rows="fixed")
+            st.data_editor(missed_bricks, num_rows="fixed")
         else:
             st.success("No missing bricks")
 
@@ -62,16 +62,17 @@ def check_missing(prep_df,dist_name,year,month):
         st.error(f"{e}")   
 
 
-def map_append(mapsheet,dist_name,year,month,user,date_time):
+
+# def map_append(mapsheet,dist_name,year,month,user,date_time):
         
-        uploadedmap = pd.read_excel(BytesIO(mapsheet.getbuffer()))
+#         uploadedmap = pd.read_excel(BytesIO(mapsheet.getbuffer()))
     
-        mapping_file = f"./mapping/map_{dist_name}.xlsx"
+#         mapping_file = f"./mapping/map_{dist_name}.xlsx"
 
-        products = pd.read_excel(mapping_file, sheet_name="products")
-        bricks = pd.read_excel(mapping_file, sheet_name="bricks", dtype={"dist_brickcode":str})
+#         products = pd.read_excel(mapping_file, sheet_name="products")
+#         bricks = pd.read_excel(mapping_file, sheet_name="bricks", dtype={"dist_brickcode":str})
 
 
-        if "item_code" in mapsheet.columns and "dist_itemcode" in mapsheet.columns:
-            mapsheet
+#         if "item_code" in mapsheet.columns and "dist_itemcode" in mapsheet.columns:
+#             mapsheet
 
