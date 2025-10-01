@@ -18,7 +18,7 @@ def prep_sofico(cleaned_file , distname , year , month):
             else row["OrderAccount"] if row["ZipCode"] == 1102
             else row["ZipCode"],
             axis=1
-        )
+        ).astype(str)
 
         prepared_file["sales_units"] = prepared_file["SalesQty"] + prepared_file["ReturnQty"]
         prepared_file["bonus_units"] = prepared_file["BonusQty"] + prepared_file["ReturnBonus"]
