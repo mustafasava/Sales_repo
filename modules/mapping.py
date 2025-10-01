@@ -8,8 +8,8 @@ def mapping(prep_df,dist_name,year,month):
         mapping_file = f"./mapping/map_{dist_name}.xlsx"
 
         products = pd.read_excel(mapping_file, sheet_name="products")
-        bricks = pd.read_excel(mapping_file, sheet_name="bricks")
-        
+        bricks = pd.read_excel(mapping_file, sheet_name="bricks", dtype={"dist_brickcode":str})
+
         merged_products = prep_df.merge(
             products,
             left_on="item_code",
