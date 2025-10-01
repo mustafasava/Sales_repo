@@ -23,13 +23,8 @@ def check_missing(prep_df,dist_name,year,month):
 
         if not missed_products.empty:
             st.write("### Enter missing mappings")
-            st.data_editor(missed_bricks,column_config={"dist_itemcode": st.column_config.SelectboxColumn("Distributor Item Code",
-            options=products_list,
-            required=True
-        )
-    },
-    hide_index=True
-)
+            st.data_editor(missed_products,column_config={"dist_itemcode": st.column_config.SelectboxColumn("Distributor Item Code",options=products_list,
+            required=True)},hide_index=True)
         else:
             st.success("No missing products")
 
