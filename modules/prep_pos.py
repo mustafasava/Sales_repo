@@ -13,7 +13,10 @@ def prep_pos(cleaned_file , distname , year , month):
                 "Bonus": "bonus_units"
         })
 
+<<<<<<< HEAD
         
+=======
+>>>>>>> parent of ff550e1 (m)
         prepared_file["sales_units"] = prepared_file["sales_units"].astype(float)
         prepared_file["bonus_units"] = prepared_file["bonus_units"].astype(float)
 
