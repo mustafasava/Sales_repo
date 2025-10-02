@@ -42,7 +42,7 @@ def sales():
     import plotly.express as px
 
     # Load your dataframe
-    df = pd.read_csv("your_data.csv")  # or however you load it
+    
 
     st.set_page_config(page_title="Sales Dashboard", layout="wide")
 
