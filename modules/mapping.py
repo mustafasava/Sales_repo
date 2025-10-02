@@ -1,6 +1,5 @@
 import pandas as pd
 from info import dist_list
-# from download import download
 import streamlit as st
 from io import BytesIO
 
@@ -45,9 +44,12 @@ def check_missing(prep_df,dist_name,year,month):
 
         if not missed_bricks.empty:
 
+            bricks_list = pd.read_excel("./mapping/main_lists.xlsx",sheet_name="bricks")
+            
+
             disabled_colsb = [col for col in missed_bricks.columns if col != "brick"]
             st.write("### Enter missing Bricks mappings")
-            st.data_editor(missed_bricks,column_config={"brick": st.column_config.SelectboxColumn("brick",options=products_list,
+            st.data_editor(missed_bricks,column_config={"brick": st.column_config.SelectboxColumn("brick",options=bricks_list,
             required=True)},disabled=disabled_colsb,hide_index=True)
         else:
             st.success("No missing bricks")
