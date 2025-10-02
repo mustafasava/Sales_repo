@@ -4,6 +4,7 @@ from info import dist_list
 from save import save
 from mapping import check_missing
 import pandas as pd
+import plotly.express as px
 
 
 def admin():
@@ -37,9 +38,8 @@ def admin():
 
 def sales():
     df = pd.read_excel("./prepared_src/prep_egydrug_2025_7.xlsx")
-    import streamlit as st
-    import pandas as pd
-    import plotly.express as px
+    
+    
 
     # Load your dataframe
     
