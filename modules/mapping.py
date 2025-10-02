@@ -1,5 +1,5 @@
 import pandas as pd
-from info import dist_list,products_list
+from info import dist_list
 # from download import download
 import streamlit as st
 from io import BytesIO
