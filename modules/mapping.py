@@ -19,12 +19,13 @@ def check_missing(prep_df,dist_name,year,month):
             how="left"
         )
 
-        missed_products = merged_products[merged_products["dist_itemcode"].isna()][["item_code","item_name","dist_itemcode"]].drop_duplicates()
+        missed_products = merged_products[merged_products["dist_itemcode"].isna()][["item_code","item_name","item"]].drop_duplicates()
 
         if not missed_products.empty:
+            disabled_colsp = [col for col in missed_products.columns if col != "item"]
             st.write("### Enter missing Products mappings")
-            st.data_editor(missed_products,column_config={"dist_itemcode": st.column_config.SelectboxColumn("Distributor Item Code",options=products_list,
-            required=True)},hide_index=True)
+            st.data_editor(missed_products,column_config={"dist_itemcode": st.column_config.SelectboxColumn("internal product",options=products_list,
+            required=True)}, disabled=disabled_colsp ,hide_index=True)
         else:
             st.success("No missing products")
 
@@ -36,12 +37,14 @@ def check_missing(prep_df,dist_name,year,month):
             how="left"
         )
 
-        missed_bricks = merged_bricks[merged_bricks["dist_brickcode"].isna()][dist_list[dist_name][2]+["dist_brickcode"]].drop_duplicates()
+        missed_bricks = merged_bricks[merged_bricks["dist_brickcode"].isna()][dist_list[dist_name][2]+["brick"]].drop_duplicates()
 
         if not missed_bricks.empty:
+
+            disabled_colsb = [col for col in missed_bricks.columns if col != "brick"]
             st.write("### Enter missing Bricks mappings")
             st.data_editor(missed_bricks,column_config={"dist_brickcode": st.column_config.SelectboxColumn("Distributor Item Code",options=products_list,
-            required=True)},hide_index=True)
+            required=True)},disabled=disabled_colsb,hide_index=True)
         else:
             st.success("No missing bricks")
 
