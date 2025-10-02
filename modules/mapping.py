@@ -22,7 +22,7 @@ def check_missing(prep_df,dist_name,year,month):
         missed_products = merged_products[merged_products["dist_itemcode"].isna()][["item_code","item_name","dist_itemcode"]].drop_duplicates()
 
         if not missed_products.empty:
-            st.write("### Enter missing mappings")
+            st.write("### Enter missing Products mappings")
             st.data_editor(missed_products,column_config={"dist_itemcode": st.column_config.SelectboxColumn("Distributor Item Code",options=products_list,
             required=True)},hide_index=True)
         else:
