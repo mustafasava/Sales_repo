@@ -49,7 +49,7 @@ def check_missing(prep_df,dist_name,year,month):
 
             disabled_colsb = [col for col in missed_bricks.columns if col != "brick"]
             st.write("### Enter missing Bricks mappings")
-            st.data_editor(missed_bricks,column_config={"brick": st.column_config.SelectboxColumn("brick",options=bricks_list["bricks"].tolist(),
+            st.data_editor(missed_bricks,column_config={"brick": st.column_config.SelectboxColumn("brick",options=bricks_list["bricks"].tolist()+[""],
             required=True)},disabled=disabled_colsb,hide_index=True)
         else:
             st.success("No missing bricks")
