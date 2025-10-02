@@ -24,7 +24,7 @@ def check_missing(prep_df,dist_name,year,month):
         if not missed_products.empty:
 
             products_list = pd.read_excel("./mapping/main_lists.xlsx",sheet_name="products")
-            name_to_code = dict(zip(products_list["product_name"], products_list["product_code"]))
+            name_to_code = dict(zip(products_list["product"], products_list["barcode"]))
             disabled_colsp = [col for col in missed_products.columns if col != "item"]
 
             st.write("### Enter missing Products mappings")
