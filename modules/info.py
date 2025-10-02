@@ -27,7 +27,7 @@ auth = {"Mustafa Muhammed": ["admin", "sava1998", "all"],
         "Mohamed Saleh": ["sales", "MS1234", "all"],
         "Mohamed Rayes": ["sales", "MR1234", "all"]   }
 
-products_list = {"A":"aaaaaaaa","B":"bbbbbbbbbb"}
+
 
 
 
