@@ -24,7 +24,7 @@ def check_missing(prep_df,dist_name,year,month):
         if not missed_products.empty:
             disabled_colsp = [col for col in missed_products.columns if col != "item"]
             st.write("### Enter missing Products mappings")
-            st.data_editor(missed_products,column_config={"dist_itemcode": st.column_config.SelectboxColumn("internal product",options=products_list,
+            st.data_editor(missed_products,column_config={"item": st.column_config.SelectboxColumn("internal product",options=products_list,
             required=True)}, disabled=disabled_colsp ,hide_index=True)
         else:
             st.success("No missing products")
@@ -43,7 +43,7 @@ def check_missing(prep_df,dist_name,year,month):
 
             disabled_colsb = [col for col in missed_bricks.columns if col != "brick"]
             st.write("### Enter missing Bricks mappings")
-            st.data_editor(missed_bricks,column_config={"dist_brickcode": st.column_config.SelectboxColumn("Distributor Item Code",options=products_list,
+            st.data_editor(missed_bricks,column_config={"brick": st.column_config.SelectboxColumn("Distributor Item Code",options=products_list,
             required=True)},disabled=disabled_colsb,hide_index=True)
         else:
             st.success("No missing bricks")
