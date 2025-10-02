@@ -37,31 +37,53 @@ def admin():
 
 
 def sales():
-    df7 = pd.read_excel("./prepared_src/prep_egydrug_2025_7.xlsx",header=0)
-    df6 = pd.read_excel("./prepared_src/prep_egydrug_2025_6.xlsx",header=0)
-    df5 = pd.read_excel("./prepared_src/prep_egydrug_2025_5.xlsx",header=0)
-    df4 = pd.read_excel("./prepared_src/prep_egydrug_2025_4.xlsx")
-    df = pd.concat([df4, df5, df6,df7], axis=0, ignore_index=True)
-    
+    import streamlit as st
+    import pandas as pd
+    import plotly.express as px
 
-    # Load your dataframe
-    
+# --- Load Data ---
+    df7 = pd.read_excel("./prepared_src/prep_egydrug_2025_7.xlsx", header=0)
+    df6 = pd.read_excel("./prepared_src/prep_egydrug_2025_6.xlsx", header=0)
+    df5 = pd.read_excel("./prepared_src/prep_egydrug_2025_5.xlsx", header=0)
+    df4 = pd.read_excel("./prepared_src/prep_egydrug_2025_4.xlsx", header=0)
+    df = pd.concat([df4, df5, df6, df7], axis=0, ignore_index=True)
 
     st.set_page_config(page_title="Sales Dashboard", layout="wide")
 
-    # --- Sidebar filters
+    # --- Sidebar slicer filters ---
     st.sidebar.header("Filters")
-    year = st.sidebar.multiselect("Year", options=df["year"].unique(), default=df["year"].unique())
-    month = st.sidebar.multiselect("Month", options=df["month"].unique(), default=df["month"].unique())
-    dist = st.sidebar.multiselect("Distributor", options=df["dist_name"].unique(), default=df["dist_name"].unique())
-    product = st.sidebar.multiselect("Product", options=df["item_name"].unique())
 
-    # Apply filters
-    df_filtered = df.query("year in @year and month in @month and dist_name in @dist")
-    if product:
-        df_filtered = df_filtered[df_filtered["item_name"].isin(product)]
+    year = st.sidebar.segmented_control(
+        "Year",
+        options=sorted(df["year"].unique()),
+        default=df["year"].max()   # latest year by default
+    )
 
-    # --- KPIs
+    month = st.sidebar.segmented_control(
+        "Month",
+        options=sorted(df["month"].unique()),
+        default=df["month"].max()  # latest month by default
+    )
+
+    dist = st.sidebar.segmented_control(
+        "Distributor",
+        options=sorted(df["dist_name"].unique()),
+        default=df["dist_name"].unique()[0]  # first distributor as default
+    )
+
+    product = st.sidebar.selectbox(   # product list can be long, keep dropdown
+        "Product",
+        options=["All"] + list(df["item_name"].unique()),
+        index=0
+    )
+
+    # --- Apply filters ---
+    df_filtered = df[(df["year"] == year) & (df["month"] == month) & (df["dist_name"] == dist)]
+
+    if product != "All":
+        df_filtered = df_filtered[df_filtered["item_name"] == product]
+
+    # --- KPIs ---
     total_sales = df_filtered["sales_units"].sum()
     total_bonus = df_filtered["bonus_units"].sum()
     unique_customers = df_filtered["customer_name"].nunique()
@@ -73,9 +95,9 @@ def sales():
     col3.metric("Unique Customers", unique_customers)
     col4.metric("Unique Products", unique_products)
 
-    # --- Charts
+    # --- Charts ---
     st.subheader("Sales Trend Over Time")
-    trend = df_filtered.groupby(["year","month"])["sales_units"].sum().reset_index()
+    trend = df_filtered.groupby(["year", "month"])["sales_units"].sum().reset_index()
     fig_trend = px.line(trend, x="month", y="sales_units", color="year", markers=True)
     st.plotly_chart(fig_trend, use_container_width=True)
 
@@ -95,4 +117,3 @@ def sales():
 
     st.subheader("Detailed Data")
     st.dataframe(df_filtered)
-
