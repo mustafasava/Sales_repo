@@ -1,6 +1,7 @@
 import streamlit as st
 from auth import login, logout
-from admin import admin
+from admin import admin , sales
+
 
 # ------------------- LOGIN -------------------
 if not login():
@@ -16,3 +17,6 @@ if st.session_state.role == "admin":
        
     except Exception as e:
         st.error(f"{e}")
+
+else:
+    sales()
