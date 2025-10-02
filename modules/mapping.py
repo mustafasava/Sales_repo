@@ -39,7 +39,9 @@ def check_missing(prep_df,dist_name,year,month):
         missed_bricks = merged_bricks[merged_bricks["dist_brickcode"].isna()][dist_list[dist_name][2]+["dist_brickcode"]].drop_duplicates()
 
         if not missed_bricks.empty:
-            st.data_editor(missed_bricks, num_rows="fixed")
+            st.write("### Enter missing Bricks mappings")
+            st.data_editor(missed_bricks,column_config={"dist_brickcode": st.column_config.SelectboxColumn("Distributor Item Code",options=products_list,
+            required=True)},hide_index=True)
         else:
             st.success("No missing bricks")
 
