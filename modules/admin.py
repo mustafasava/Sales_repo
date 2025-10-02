@@ -37,9 +37,9 @@ def admin():
 
 
 def sales():
-    df7 = pd.read_excel("./prepared_src/prep_egydrug_2025_7.xlsx")
-    df6 = pd.read_excel("./prepared_src/prep_egydrug_2025_6.xlsx")
-    df5 = pd.read_excel("./prepared_src/prep_egydrug_2025_5.xlsx")
+    df7 = pd.read_excel("./prepared_src/prep_egydrug_2025_7.xlsx",header=0)
+    df6 = pd.read_excel("./prepared_src/prep_egydrug_2025_6.xlsx",header=0)
+    df5 = pd.read_excel("./prepared_src/prep_egydrug_2025_5.xlsx",header=0)
     df4 = pd.read_excel("./prepared_src/prep_egydrug_2025_4.xlsx")
     df = pd.concat([df4, df5, df6,df7], axis=0, ignore_index=True)
     
