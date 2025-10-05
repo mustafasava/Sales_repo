@@ -56,7 +56,7 @@ def check_missing(prep_df,dist_name,year,month):
 
 
             if st.button("save"):
-                missing_bricks = missing_bricks.drop_duplicates(subset=["brick_code"],how = "all")
+                missing_bricks = missing_bricks.drop_duplicates(subset=["brick_code"])
                 missing_bricks = missing_bricks.dropna(subset=["brick"],how = "all")
                 st.data_editor(missed_bricks)
         else:
