@@ -2,6 +2,7 @@ import pandas as pd
 from info import dist_list
 import streamlit as st
 from io import BytesIO
+import numpy as np
 
 
 def check_missing(prep_df,dist_name,year,month):
@@ -49,8 +50,15 @@ def check_missing(prep_df,dist_name,year,month):
 
             disabled_colsb = [col for col in missed_bricks.columns if col != "brick"]
             st.write("### Enter missing Bricks mappings")
-            st.data_editor(missed_bricks,column_config={"brick": st.column_config.SelectboxColumn("brick",options=[""]+bricks_list["bricks"].tolist(),
-            required=True)},disabled=disabled_colsb,hide_index=True)
+
+            missing_bricks = st.data_editor(missed_bricks,column_config={"brick": st.column_config.SelectboxColumn("brick",options=[""]+bricks_list["bricks"].tolist(),
+                                required=True)},disabled=disabled_colsb,hide_index=True)
+
+
+            if st.button("save"):
+                missing_bricks = missing_bricks.drop_duplicates(subset=["brick_code"],how = "all")
+                missing_bricks = missing_bricks.dropna(subset=["brick"],how = "all")
+                st.data_editor(missed_bricks)
         else:
             st.success("No missing bricks")
 
