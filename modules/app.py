@@ -18,5 +18,5 @@ if st.session_state.role == "admin":
     except Exception as e:
         st.error(f"{e}")
 
-else:
-    sales()
+
+    
