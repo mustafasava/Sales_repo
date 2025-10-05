@@ -1,6 +1,6 @@
 import streamlit as st
 from auth import login, logout
-from admin import admin , sales
+from admin import admin 
 
 
 # ------------------- LOGIN -------------------
