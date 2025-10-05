@@ -58,7 +58,7 @@ def check_missing(prep_df,dist_name,year,month):
             if st.button("save"):
                 missing_bricks = missing_bricks.drop_duplicates(subset=["brick_code"])
                 missing_bricks = missing_bricks.dropna(subset=["brick"],how = "all")
-                st.data_editor(missed_bricks)
+                st.data_editor(missing_bricks)
         else:
             st.success("No missing bricks")
 
@@ -83,17 +83,4 @@ def check_missing(prep_df,dist_name,year,month):
         st.error(f"{e}")   
 
 
-
-# def map_append(mapsheet,dist_name,year,month,user,date_time):
-        
-#         uploadedmap = pd.read_excel(BytesIO(mapsheet.getbuffer()))
-    
-#         mapping_file = f"./mapping/map_{dist_name}.xlsx"
-
-#         products = pd.read_excel(mapping_file, sheet_name="products")
-#         bricks = pd.read_excel(mapping_file, sheet_name="bricks", dtype={"dist_brickcode":str})
-
-
-#         if "item_code" in mapsheet.columns and "dist_itemcode" in mapsheet.columns:
-#             mapsheet
 
