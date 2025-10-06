@@ -130,9 +130,9 @@ def replace_sheet_in_github(df, sheet_name, path_in_repo, commit_msg):
     new_buffer = BytesIO()
     wb.save(new_buffer)
     new_buffer.seek(0)
-    new_content = base64.b64encode(new_buffer.read()).decode()
+    new_bytes = new_buffer.read()
 
     # --- Step 4: Push updated file to GitHub ---
-    repo.update_file(path_in_repo, commit_msg, new_content, file.sha, branch="main")
+    repo.update_file(path_in_repo, commit_msg, new_bytes, file.sha, branch="main")
 
     st.success(f"Replaced sheet '{sheet_name}' in {path_in_repo}")
