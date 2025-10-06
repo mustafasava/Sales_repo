@@ -88,6 +88,7 @@ def check_missing(prep_df,dist_name,year,month):
                         contents.sha
                     )
                     st.info(f"saved")
+                    st.rerun()
                 except:
                     st.error("Error happened while updating. Not saved.")
 
