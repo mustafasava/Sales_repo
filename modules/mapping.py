@@ -7,6 +7,7 @@ import base64
 from datetime import datetime
 from openpyxl import load_workbook
 import os
+from github import Github
 
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
