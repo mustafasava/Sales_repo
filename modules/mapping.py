@@ -3,11 +3,8 @@ from info import dist_list
 import streamlit as st
 from io import BytesIO
 import numpy as np
-import base64
 from datetime import datetime
-from openpyxl import load_workbook
 import os
-from openpyxl.utils.dataframe import dataframe_to_rows
 from github import Github
 
 
@@ -20,10 +17,11 @@ repo = g.get_repo(GITHUB_REPO)
 
 def check_missing(prep_df,dist_name,year,month):
     try:
-        mapping_file = f"./mapping/map_{dist_name}.xlsx"
+        mapping_products_file = f"./mapping/map_{dist_name}_products.xlsx"
+        mapping_bricks_file = f"./mapping/map_{dist_name}_bricks.xlsx"
 
-        products = pd.read_excel(mapping_file, sheet_name="products")
-        bricks = pd.read_excel(mapping_file, sheet_name="bricks", dtype={"dist_brickcode":str})
+        products = pd.read_excel(mapping_products_file, sheet_name="products")
+        bricks = pd.read_excel(mapping_bricks_file, sheet_name="bricks", dtype={"dist_brickcode":str})
 
         merged_products = prep_df.merge(
             products,
@@ -68,7 +66,7 @@ def check_missing(prep_df,dist_name,year,month):
                                 required=True)},disabled=disabled_colsb,hide_index=True)
 
 
-            if st.button("save_bricks"):
+            if st.button("Save Bricks"):
                 missing_bricks = missing_bricks.drop_duplicates(subset=["brick_code"])
                 missing_bricks = missing_bricks.dropna(subset=["brick"],how = "all")
                 missing_bricks = missing_bricks.rename(columns={"brick_code":"dist_brickcode"})
@@ -78,7 +76,22 @@ def check_missing(prep_df,dist_name,year,month):
 
                 missing_bricks = missing_bricks[["dist_brickcode","brick","added_by","date_time"]]
                 new_mapped_bricks = pd.concat([bricks, missing_bricks], ignore_index=True).drop_duplicates(subset=["dist_brickcode"])
-                replace_sheet_in_github(new_mapped_bricks, "bricks", mapping_file, "Update bricks")
+                buffer = BytesIO()
+                new_mapped_bricks.to_excel(buffer, index=False, sheet_name="bricks")
+                buffer.seek(0)
+                try:
+                    contents = repo.get_contents(mapping_bricks_file)
+                    repo.update_file(
+                        mapping_bricks_file,
+                        f"Update map_{dist_name}_bricks.xlsx",
+                        buffer.read(),
+                        contents.sha
+                    )
+                    st.info(f"saved")
+                except:
+                    st.error("Error happened while updating. Not saved.")
+
+                
 
 
         else:
@@ -106,33 +119,3 @@ def check_missing(prep_df,dist_name,year,month):
 
 
 
-def replace_sheet_in_github(df, sheet_name, path_in_repo, commit_msg):
-
-    # --- Step 1: Get current file from GitHub ---
-    file = repo.get_contents(path_in_repo)
-    content = base64.b64decode(file.content)
-    buffer = BytesIO(content)
-
-    # --- Step 2: Load workbook and replace sheet ---
-    wb = load_workbook(buffer)
-
-    if sheet_name in wb.sheetnames:
-        # remove old sheet
-        std = wb[sheet_name]
-        wb.remove(std)
-
-    # create new sheet with updated df
-    ws = wb.create_sheet(title=sheet_name)
-    for r in dataframe_to_rows(df, index=False, header=True):
-        ws.append(r)
-
-    # --- Step 3: Save updated workbook to memory ---
-    new_buffer = BytesIO()
-    wb.save(new_buffer)
-    new_buffer.seek(0)
-    new_bytes = new_buffer.read()
-
-    # --- Step 4: Push updated file to GitHub ---
-    repo.update_file(path_in_repo, commit_msg, new_bytes, file.sha, branch="main")
-
-    st.success(f"Replaced sheet '{sheet_name}' in {path_in_repo}")
