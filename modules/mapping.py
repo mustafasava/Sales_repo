@@ -48,7 +48,7 @@ def check_missing(prep_df, dist_name, year, month):
                 column_config={
                     "item": st.column_config.SelectboxColumn(
                         "Select Product",
-                        options=["a","b"],#list(name_to_code.keys()),
+                        options=list(name_to_code.keys()),
                         required=True
                     )
                 },
@@ -66,7 +66,7 @@ def check_missing(prep_df, dist_name, year, month):
                     missing_products = missing_products.dropna(subset=["item"], how="all")
 
                     # Map selected product name → barcode
-                    # missing_products["item"] = missing_products["item"].map(name_to_code)
+                    missing_products["item"] = missing_products["item"].map(name_to_code)
 
                     # Add metadata
                     missing_products = missing_products.rename(columns={"item_code": "dist_itemcode"})
@@ -77,6 +77,7 @@ def check_missing(prep_df, dist_name, year, month):
                     missing_products = missing_products[["dist_itemcode", "item", "added_by", "date_time"]]
 
                     # Merge with existing mapped products
+                    st.dataframe(missing_products)
                     new_mapped_products = pd.concat(
                         [products, missing_products],
                         ignore_index=True
