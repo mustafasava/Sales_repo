@@ -16,23 +16,44 @@ repo = g.get_repo(GITHUB_REPO)
 
 def _ensure_df(obj, name="object"):
     """
-    Convert obj to a pandas DataFrame if it's a dict or list.
-    If it's already a DataFrame, return as-is.
+    Convert whatever Streamlit data_editor returns into a proper pandas DataFrame.
+    Handles dicts-of-lists, list-of-dicts, or nested dicts.
     """
+    import pandas as pd
+
     if isinstance(obj, pd.DataFrame):
         return obj
-    if isinstance(obj, dict):
-        # dict of columns -> lists
-        try:
+
+    # Sometimes it's a list of dicts
+    if isinstance(obj, list):
+        if all(isinstance(x, dict) for x in obj):
             return pd.DataFrame(obj)
+        else:
+            return pd.DataFrame(obj)
+
+    # Sometimes it's a dict of columns -> lists
+    if isinstance(obj, dict):
+        try:
+            # If dict values are also dicts, flatten them
+            if all(isinstance(v, dict) for v in obj.values()):
+                # Flatten nested dicts to DataFrame
+                rows = []
+                for k, v in obj.items():
+                    if isinstance(v, dict):
+                        v["__index__"] = k
+                        rows.append(v)
+                return pd.DataFrame(rows)
+            # If it's a dict of lists
+            elif all(isinstance(v, (list, tuple)) for v in obj.values()):
+                return pd.DataFrame({k: list(v) for k, v in obj.items()})
+            else:
+                # Try one more generic attempt
+                return pd.json_normalize(obj)
         except Exception as e:
             raise TypeError(f"Cannot convert dict '{name}' to DataFrame: {e}")
-    if isinstance(obj, list):
-        try:
-            return pd.DataFrame(obj)
-        except Exception as e:
-            raise TypeError(f"Cannot convert list '{name}' to DataFrame: {e}")
+
     raise TypeError(f"Unsupported type for '{name}': {type(obj)}")
+
 
 
 def check_missing(prep_df, dist_name, year, month):
