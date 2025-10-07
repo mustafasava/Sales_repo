@@ -30,7 +30,8 @@ def admin():
                         save(cleaned[0], cleaned[1], cleaned[2], cleaned[3],"cleaned")
                         save(mapped[0], mapped[1], mapped[2], mapped[3],"prep")
                         st.success(f"( {mapped[1]} ) sheet has been uploaded, cleaned, prepared, mapped and saved successfully !")
-
+        if st.button("Rerun"):
+            st.rerun()
         
     except Exception as e:
         st.error(f"{e}")
