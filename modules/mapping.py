@@ -43,7 +43,7 @@ def check_missing(prep_df, dist_name, year, month):
 
             disabled_colsp = [col for col in missed_products.columns if col != "item"]
 
-            missing_products_editor = st.data_editor(
+            missing_products = st.data_editor(
                 missed_products,
                 column_config={
                     "item": st.column_config.SelectboxColumn(
@@ -59,7 +59,7 @@ def check_missing(prep_df, dist_name, year, month):
 
             if st.button("Save Products"):
                 try:
-                    missing_products = pd.DataFrame(missing_products_editor)
+                    
 
                     # Drop duplicates and empty rows
                     missing_products = missing_products.drop_duplicates(subset=["item_code"])
