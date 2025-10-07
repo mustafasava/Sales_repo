@@ -48,7 +48,7 @@ def check_missing(prep_df, dist_name, year, month):
                 column_config={
                     "item": st.column_config.SelectboxColumn(
                         "item",
-                        options=list(name_to_code.keys()),
+                        options=[""] +list(name_to_code.keys()),
                         required=True
                     )
                 },
