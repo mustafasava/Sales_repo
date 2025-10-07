@@ -53,8 +53,8 @@ def check_missing(prep_df, dist_name, year, month):
                     )
                 },
                 disabled=disabled_colsp,
-                hide_index=True,
-                key="missing_products_editor"
+                hide_index=True
+                
             )
 
             if st.button("Save Products"):
@@ -63,21 +63,24 @@ def check_missing(prep_df, dist_name, year, month):
 
                     # Drop duplicates and empty rows
                     missing_products = missing_products.drop_duplicates(subset=["item_code"])
+                    st.dataframe(missing_products)
                     missing_products = missing_products.dropna(subset=["item"], how="all")
-
+                    st.dataframe(missing_products)
                     # Map selected product name → barcode
                     missing_products["item"] = missing_products["item"].map(name_to_code)
-
+                    st.dataframe(missing_products)
                     # Add metadata
                     missing_products = missing_products.rename(columns={"item_code": "dist_itemcode"})
+                    st.dataframe(missing_products)
                     missing_products["added_by"] = st.session_state.get("username", "guest")
                     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     missing_products["date_time"] = timestamp
 
                     missing_products = missing_products[["dist_itemcode", "item", "added_by", "date_time"]]
-
-                    # Merge with existing mapped products
                     st.dataframe(missing_products)
+                    return 0
+                    # Merge with existing mapped products
+                    
                     new_mapped_products = pd.concat(
                         [products, missing_products],
                         ignore_index=True
@@ -148,7 +151,7 @@ def check_missing(prep_df, dist_name, year, month):
 
                 missing_bricks = missing_bricks[["dist_brickcode", "brick", "added_by", "date_time"]]
 
-                st.dataframe(missing_bricks)
+                
                 new_mapped_bricks = pd.concat(
                     [bricks, missing_bricks],
                     ignore_index=True
