@@ -43,11 +43,8 @@ def check_missing(prep_df, dist_name, year, month):
 
             disabled_colsp = [col for col in missed_products.columns if col != "item"]
             missed_products["item"] = missed_products["item"].astype(str).fillna("")
-            missing_products = st.data_editor(
-                missed_products,
-                column_config={
-                    "item": st.column_config.SelectboxColumn(
-                        "item",
+
+            missing_products = st.data_editor(missed_products,column_config={"item": st.column_config.SelectboxColumn("item",
                         options= [""] +list(name_to_code.keys()),
                         required=True
                     )
@@ -59,27 +56,14 @@ def check_missing(prep_df, dist_name, year, month):
 
             if st.button("Save Products", key="save_products_btn"):
                 try:
-                    
-
-                    # Drop duplicates and empty rows
                     missing_products = missing_products.drop_duplicates(subset=["item_code"])
-                    
                     missing_products = missing_products.dropna(subset=["item"], how="all")
-                    
-                    # Map selected product name → barcode
                     missing_products["item"] = missing_products["item"].map(name_to_code)
-                    
-                    # Add metadata
                     missing_products = missing_products.rename(columns={"item_code": "dist_itemcode"})
-                    
                     missing_products["added_by"] = st.session_state.get("username", "guest")
                     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     missing_products["date_time"] = timestamp
-
                     missing_products = missing_products[["dist_itemcode", "item", "added_by", "date_time"]]
-                    
-                    
-                    # Merge with existing mapped products
                     
                     new_mapped_products = pd.concat(
                         [products, missing_products],
@@ -111,7 +95,7 @@ def check_missing(prep_df, dist_name, year, month):
             st.success("No missing products")
 
         # ------------------------------------------------------------------
-        # BRICKS SECTION (unchanged)
+        # BRICKS SECTION
         # ------------------------------------------------------------------
         merged_bricks = prep_df.merge(
             bricks,
