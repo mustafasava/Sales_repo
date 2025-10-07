@@ -46,7 +46,7 @@ def check_missing(prep_df,dist_name,year,month):
                 missing_products = missing_products.drop_duplicates(subset=["item_code"])
                 missing_products = missing_products.dropna(subset=["item"],how = "all")
                 missing_products = missing_products.rename(columns={"item_code":"dist_itemcode"})
-                missing_products["item"] = missing_products["item"].map(name_to_code)
+                # missing_products["item"] = missing_products["item"].map(name_to_code)
                 missing_products["added_by"] = st.session_state.get("username")
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 missing_products["date_time"] =  timestamp
