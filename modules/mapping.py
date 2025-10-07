@@ -53,11 +53,11 @@ def check_missing(prep_df, dist_name, year, month):
                     )
                 },
                 disabled=disabled_colsp,
-                hide_index=True
-                
+                hide_index=True,
+                key="products_editor" 
             )
 
-            if st.button("Save Products"):
+            if st.button("Save Products", key="save_products_btn"):
                 try:
                     
 
