@@ -147,12 +147,16 @@ def check_missing(prep_df, dist_name, year, month):
                 missing_bricks["date_time"] = timestamp
 
                 missing_bricks = missing_bricks[["dist_brickcode", "brick", "added_by", "date_time"]]
+
+                st.dataframe(missing_bricks)
                 new_mapped_bricks = pd.concat(
                     [bricks, missing_bricks],
                     ignore_index=True
                 ).drop_duplicates(subset=["dist_brickcode"])
 
                 buffer = BytesIO()
+
+                
                 new_mapped_bricks.to_excel(buffer, index=False, sheet_name="bricks")
                 buffer.seek(0)
                 try:
