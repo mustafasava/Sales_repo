@@ -39,8 +39,36 @@ def check_missing(prep_df,dist_name,year,month):
             disabled_colsp = [col for col in missed_products.columns if col != "item"]
 
             st.write("### Enter missing Products mappings")
-            st.data_editor(missed_products,column_config={"item": st.column_config.SelectboxColumn("item",options=list(name_to_code.keys()),
+            missing_products = st.data_editor(missed_products,column_config={"item": st.column_config.SelectboxColumn("item",options=list(name_to_code.keys()),
             required=True)}, disabled=disabled_colsp ,hide_index=True)
+
+            if st.button("Save Products"):
+                missing_products = missing_products.drop_duplicates(subset=["item_code"])
+                missing_products = missing_products.dropna(subset=["item"],how = "all")
+                missing_products = missing_products.rename(columns={"item_code":"dist_itemcode"})
+                missing_products["item"] = missing_products["item"].map(name_to_code)
+                missing_products["added_by"] = st.session_state.get("username")
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                missing_products["date_time"] =  timestamp
+
+                missing_products = missing_products[["dist_itemcode","item","added_by","date_time"]]
+                new_mapped_products = pd.concat([products, missing_products], ignore_index=True).drop_duplicates(subset=["dist_itemcode"])
+                buffer = BytesIO()
+                new_mapped_products.to_excel(buffer, index=False, sheet_name="products")
+                buffer.seek(0)
+                try:
+                    contents = repo.get_contents(mapping_products_file)
+                    repo.update_file(
+                        mapping_products_file,
+                        f"Update map_{dist_name}_products.xlsx",
+                        buffer.read(),
+                        contents.sha
+                    )
+                    st.info(f"saved")
+                
+                except Exception as e:
+                    st.error(f"Error happened while updating. Not saved. details: {e}")           
+            
         else:
             st.success("No missing products")
 
@@ -89,12 +117,9 @@ def check_missing(prep_df,dist_name,year,month):
                     )
                     st.info(f"saved")
                 
-                except:
-                    st.error("Error ,,,,,,happened while updating. Not saved.")
+                except Exception as e:
+                    st.error(f"Error happened while updating. Not saved. details: {e}")
             
-                
-
-
         else:
             st.success("No missing bricks")
 
