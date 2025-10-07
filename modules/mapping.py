@@ -33,7 +33,7 @@ def check_missing(prep_df, dist_name, year, month):
             how="left"
         )
 
-        missed_products = merged_products[merged_products["dist_itemcode"].isna()][["item_code", "item_name", "item"]].drop_duplicates()
+        missed_products = merged_products[merged_products["dist_itemcode"].isna()][["item_code", "item_name","item"]].drop_duplicates()
 
         if not missed_products.empty:
             st.write("### Enter missing Products mappings")
@@ -42,7 +42,7 @@ def check_missing(prep_df, dist_name, year, month):
             name_to_code = dict(zip(products_list["product"], products_list["barcode"]))
 
             disabled_colsp = [col for col in missed_products.columns if col != "item"]
-
+            missed_products["item"] = missed_products["item"].astype(str).fillna("")
             missing_products = st.data_editor(
                 missed_products,
                 column_config={
