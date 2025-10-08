@@ -84,7 +84,7 @@ def check_missing(prep_df, dist_name, year, month):
                             contents.sha
                         )
                         st.info("✅ Products saved successfully")
-                        st.rerun()
+                        
                     except Exception as e:
                         st.error(f"Error while updating GitHub: {e}")
 
@@ -155,7 +155,7 @@ def check_missing(prep_df, dist_name, year, month):
                         contents.sha
                     )
                     st.info("✅ Bricks saved successfully")
-                    st.rerun()
+                    
                 except Exception as e:
                     st.error(f"Error while updating bricks: {e}")
 
