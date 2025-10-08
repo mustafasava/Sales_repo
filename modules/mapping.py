@@ -110,6 +110,7 @@ def check_missing(prep_df, dist_name, year, month):
             bricks_list = pd.read_excel("./mapping/main_lists.xlsx", sheet_name="bricks")
 
             disabled_colsb = [col for col in missed_bricks.columns if col != "brick"]
+            missed_bricks["brick"] = missed_bricks["brick"].astype(str).fillna("")
             st.write("### Enter missing Bricks mappings")
 
             missing_bricks = st.data_editor(
@@ -134,6 +135,7 @@ def check_missing(prep_df, dist_name, year, month):
                 missing_bricks["date_time"] = timestamp
 
                 missing_bricks = missing_bricks[["dist_brickcode", "brick", "added_by", "date_time"]]
+                
 
                 
                 new_mapped_bricks = pd.concat(
