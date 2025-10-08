@@ -173,12 +173,12 @@ def check_missing(prep_df, dist_name, year, month):
                 left_on="item_code",
                 right_on="dist_itemcode",
                 how="left"
-            ).merge(
+            )[["item","sales_units","bonus_units","dist_name","year","month","brick_code"]].merge(
                 bricks,
                 left_on="brick_code",
                 right_on="dist_brickcode",
                 how="left"
-            )
+            )[["item","brick","sales_units","bonus_units","dist_name","year","month"]]
             return final_merged, dist_name, year, month
 
         else:
