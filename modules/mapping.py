@@ -168,17 +168,17 @@ def check_missing(prep_df, dist_name, year, month):
         # FINAL MERGE
         # ------------------------------------------------------------------
         if missed_bricks.empty and missed_products.empty:
-            final_merged = prep_df.merge(
+            final_merged = (prep_df.merge(
                 products,
                 left_on="item_code",
                 right_on="dist_itemcode",
                 how="left"
-            )[["item","sales_units","bonus_units","dist_name","year","month","brick_code"]].merge(
+            ).merge(
                 bricks,
                 left_on="brick_code",
                 right_on="dist_brickcode",
                 how="left"
-            )[["item","brick","sales_units","bonus_units","dist_name","year","month"]]
+            )[["item","brick","sales_units","bonus_units","dist_name","year","month"]])
             return final_merged, dist_name, year, month
 
         else:
