@@ -97,92 +97,92 @@ def check_missing(prep_df, dist_name, year, month):
         # ------------------------------------------------------------------
         # BRICKS SECTION
         # ------------------------------------------------------------------
-        merged_bricks = prep_df.merge(
-            bricks,
-            left_on="brick_code",
-            right_on="dist_brickcode",
-            how="left"
-        )
-
-        missed_bricks = merged_bricks[merged_bricks["dist_brickcode"].isna()][dist_list[dist_name][2] + ["brick"]].drop_duplicates()
-
-        if not missed_bricks.empty:
-            bricks_list = pd.read_excel("./mapping/main_lists.xlsx", sheet_name="bricks")
-
-            disabled_colsb = [col for col in missed_bricks.columns if col != "brick"]
-            missed_bricks["brick"] = missed_bricks["brick"].astype(str).fillna("")
-            st.write("### Enter missing Bricks mappings")
-
-            missing_bricks = st.data_editor(
-                missed_bricks,
-                column_config={
-                    "brick": st.column_config.SelectboxColumn(
-                        "brick",
-                        options=[""] + bricks_list["bricks"].tolist(),
-                        required=True
-                    )
-                },
-                disabled=disabled_colsb,
-                hide_index=True
-            )
-
-            if st.button("Save Bricks"):
-                missing_bricks = missing_bricks.drop_duplicates(subset=["brick_code"])
-                missing_bricks = missing_bricks.dropna(subset=["brick"], how="all")
-                missing_bricks = missing_bricks.rename(columns={"brick_code": "dist_brickcode"})
-                missing_bricks["added_by"] = st.session_state.get("username", "guest")
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                missing_bricks["date_time"] = timestamp
-
-                missing_bricks = missing_bricks[["dist_brickcode", "brick", "added_by", "date_time"]]
-                
-
-                
-                new_mapped_bricks = pd.concat(
-                    [bricks, missing_bricks],
-                    ignore_index=True
-                ).drop_duplicates(subset=["dist_brickcode"])
-
-                buffer = BytesIO()
-
-                
-                new_mapped_bricks.to_excel(buffer, index=False, sheet_name="bricks")
-                buffer.seek(0)
-                try:
-                    contents = repo.get_contents(mapping_bricks_file)
-                    repo.update_file(
-                        mapping_bricks_file,
-                        f"Update map_{dist_name}_bricks.xlsx",
-                        buffer.read(),
-                        contents.sha
-                    )
-                    st.info("✅ Bricks saved successfully")
-                    
-                except Exception as e:
-                    st.error(f"Error while updating bricks: {e}")
-
-        else:
-            st.success("No missing bricks")
-
-        # ------------------------------------------------------------------
-        # FINAL MERGE
-        # ------------------------------------------------------------------
-        if missed_bricks.empty and missed_products.empty:
-            final_merged = (prep_df.merge(
-                products,
-                left_on="item_code",
-                right_on="dist_itemcode",
-                how="left"
-            ).merge(
+            merged_bricks = prep_df.merge(
                 bricks,
                 left_on="brick_code",
                 right_on="dist_brickcode",
                 how="left"
-            )[["item","brick","sales_units","bonus_units","dist_name","year","month"]])
-            return final_merged, dist_name, year, month
+            )
 
-        else:
-            return
+            missed_bricks = merged_bricks[merged_bricks["dist_brickcode"].isna()][dist_list[dist_name][2] + ["brick"]].drop_duplicates()
+
+            if not missed_bricks.empty:
+                bricks_list = pd.read_excel("./mapping/main_lists.xlsx", sheet_name="bricks")
+
+                disabled_colsb = [col for col in missed_bricks.columns if col != "brick"]
+                missed_bricks["brick"] = missed_bricks["brick"].astype(str).fillna("")
+                st.write("### Enter missing Bricks mappings")
+
+                missing_bricks = st.data_editor(
+                    missed_bricks,
+                    column_config={
+                        "brick": st.column_config.SelectboxColumn(
+                            "brick",
+                            options=[""] + bricks_list["bricks"].tolist(),
+                            required=True
+                        )
+                    },
+                    disabled=disabled_colsb,
+                    hide_index=True
+                )
+
+                if st.button("Save Bricks"):
+                    missing_bricks = missing_bricks.drop_duplicates(subset=["brick_code"])
+                    missing_bricks = missing_bricks.dropna(subset=["brick"], how="all")
+                    missing_bricks = missing_bricks.rename(columns={"brick_code": "dist_brickcode"})
+                    missing_bricks["added_by"] = st.session_state.get("username", "guest")
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    missing_bricks["date_time"] = timestamp
+
+                    missing_bricks = missing_bricks[["dist_brickcode", "brick", "added_by", "date_time"]]
+                    
+
+                    
+                    new_mapped_bricks = pd.concat(
+                        [bricks, missing_bricks],
+                        ignore_index=True
+                    ).drop_duplicates(subset=["dist_brickcode"])
+
+                    buffer = BytesIO()
+
+                    
+                    new_mapped_bricks.to_excel(buffer, index=False, sheet_name="bricks")
+                    buffer.seek(0)
+                    try:
+                        contents = repo.get_contents(mapping_bricks_file)
+                        repo.update_file(
+                            mapping_bricks_file,
+                            f"Update map_{dist_name}_bricks.xlsx",
+                            buffer.read(),
+                            contents.sha
+                        )
+                        st.info("✅ Bricks saved successfully")
+                        
+                    except Exception as e:
+                        st.error(f"Error while updating bricks: {e}")
+
+            else:
+                st.success("No missing bricks")
+
+            # ------------------------------------------------------------------
+            # FINAL MERGE
+            # ------------------------------------------------------------------
+            if missed_bricks.empty and missed_products.empty:
+                final_merged = (prep_df.merge(
+                    products,
+                    left_on="item_code",
+                    right_on="dist_itemcode",
+                    how="left"
+                ).merge(
+                    bricks,
+                    left_on="brick_code",
+                    right_on="dist_brickcode",
+                    how="left"
+                )[["item","brick","sales_units","bonus_units","dist_name","year","month"]])
+                return final_merged, dist_name, year, month
+
+            else:
+                return
 
     except Exception as e:
         st.error(f"⚠️ General error: {e}")

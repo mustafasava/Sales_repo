@@ -24,7 +24,7 @@ def admin():
                 mapped = check_missing(prepared[0],prepared[1],prepared[2],prepared[3])
                     
                     
-                if  st.button("Rerun"):
+                if mapped is not None :
 
                     save(cleaned[0], cleaned[1], cleaned[2], cleaned[3],"cleaned")
                     save(mapped[0], mapped[1], mapped[2], mapped[3],"prep")
