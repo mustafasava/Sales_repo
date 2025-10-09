@@ -84,7 +84,7 @@ def check_missing(prep_df, dist_name, year, month):
                             contents.sha
                         )
                         st.info("✅ Products saved successfully")
-                        st.rerun()
+                        st.session_state["products_saved"] = True
                         
                         
                     except Exception as e:
@@ -94,11 +94,16 @@ def check_missing(prep_df, dist_name, year, month):
                     st.error(f"⚠️ Unexpected error while saving products: {e}")
 
         else:
+            st.session_state["products_saved"] = True
             st.success("No missing products")
 
-        # ------------------------------------------------------------------
-        # BRICKS SECTION
-        # ------------------------------------------------------------------
+
+    # ------------------------------------------------------------------
+    # BRICKS SECTION
+    # ------------------------------------------------------------------
+
+        if st.session_state.get("products_saved"):
+
             merged_bricks = prep_df.merge(
                 bricks,
                 left_on="brick_code",
@@ -159,35 +164,42 @@ def check_missing(prep_df, dist_name, year, month):
                             contents.sha
                         )
                         st.info("✅ Bricks saved successfully")
-                        st.rerun()
+                        st.session_state["bricks_saved"] = True
+                        
                         
                     except Exception as e:
                         st.error(f"Error while updating bricks: {e}")
 
             else:
+                st.session_state["bricks_saved"] = True
                 st.success("No missing bricks")
 
-            # ------------------------------------------------------------------
-            # FINAL MERGE
-            # ------------------------------------------------------------------
-                if missed_bricks.empty and missed_products.empty:
-                    final_merged = (prep_df.merge(
-                        products,
-                        left_on="item_code",
-                        right_on="dist_itemcode",
-                        how="left"
-                    ).merge(
-                        bricks,
-                        left_on="brick_code",
-                        right_on="dist_brickcode",
-                        how="left"
-                    )[["item","brick","sales_units","bonus_units","dist_name","year","month"]])
-                    st.rerun()
-                    return final_merged, dist_name, year, month
-                    
+        # ------------------------------------------------------------------
+        # FINAL MERGE
+        # ------------------------------------------------------------------
+        if st.session_state.get("products_saved") and st.session_state.get("bricks_saved"):
+            if missed_bricks.empty and missed_products.empty:
+                final_merged = (prep_df.merge(
+                    products,
+                    left_on="item_code",
+                    right_on="dist_itemcode",
+                    how="left"
+                ).merge(
+                    bricks,
+                    left_on="brick_code",
+                    right_on="dist_brickcode",
+                    how="left"
+                )[["item","brick","sales_units","bonus_units","dist_name","year","month"]])
 
-                else:
-                    return
+                st.session_state.pop("products_saved", None)
+                st.session_state.pop("bricks_saved", None)
+
+                return final_merged, dist_name, year, month
+                
+
+
+            else:
+                return
 
     except Exception as e:
         st.error(f"⚠️ General error: {e}")
