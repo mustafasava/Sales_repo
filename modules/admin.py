@@ -24,9 +24,9 @@ def admin():
                 mapped = check_missing(prepared[0],prepared[1],prepared[2],prepared[3])
                     
                     
-                while mapped is  None :
-                    ""
-                else:
+                if mapped is not None :
+                    
+                
                     save(cleaned[0], cleaned[1], cleaned[2], cleaned[3],"cleaned")
                     save(mapped[0], mapped[1], mapped[2], mapped[3],"prep")
                     st.success(f"( {mapped[1]} ) sheet has been uploaded, cleaned, prepared, mapped and saved successfully !")
