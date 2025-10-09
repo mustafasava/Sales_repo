@@ -84,6 +84,7 @@ def check_missing(prep_df, dist_name, year, month):
                             contents.sha
                         )
                         st.info("✅ Products saved successfully")
+                        st.rerun()
                         
                         
                     except Exception as e:
@@ -158,7 +159,7 @@ def check_missing(prep_df, dist_name, year, month):
                             contents.sha
                         )
                         st.info("✅ Bricks saved successfully")
-                        
+                        st.rerun()
                         
                     except Exception as e:
                         st.error(f"Error while updating bricks: {e}")
@@ -181,7 +182,9 @@ def check_missing(prep_df, dist_name, year, month):
                         right_on="dist_brickcode",
                         how="left"
                     )[["item","brick","sales_units","bonus_units","dist_name","year","month"]])
+                    st.rerun()
                     return final_merged, dist_name, year, month
+                    
 
                 else:
                     return
