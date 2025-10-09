@@ -85,7 +85,7 @@ def check_missing(prep_df, dist_name, year, month):
                         )
                         st.info("✅ Products saved successfully")
                         st.session_state["products_saved"] = True
-                        
+                        st.rerun()
                         
                     except Exception as e:
                         st.error(f"Error while updating GitHub: {e}")
@@ -165,6 +165,7 @@ def check_missing(prep_df, dist_name, year, month):
                         )
                         st.info("✅ Bricks saved successfully")
                         st.session_state["bricks_saved"] = True
+                        st.rerun()
                         
                         
                     except Exception as e:
